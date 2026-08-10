@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+	<FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PharmacyContracts.Modules.Auth.Application\PharmacyContracts.Modules.Auth.Application.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Auth.Domain\PharmacyContracts.Modules.Auth.Domain.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Auth.Infrastructure\PharmacyContracts.Modules.Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.SharedKernel\PharmacyContracts.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

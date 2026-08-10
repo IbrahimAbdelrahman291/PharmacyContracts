@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="PharmacyContracts.SharedKernel/PharmacyContracts.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="PharmacyContracts.Api/PharmacyContracts.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Auth/">
+    <Project Path="PharmacyContracts.Modules.Auth.Api/PharmacyContracts.Modules.Auth.Api.csproj" Id="2e0e37d4-9a03-462d-bd9e-c148ebc8dbb6" />
+    <Project Path="PharmacyContracts.Modules.Auth.Application/PharmacyContracts.Modules.Auth.Application.csproj" />
+    <Project Path="PharmacyContracts.Modules.Auth.Domain/PharmacyContracts.Modules.Auth.Domain.csproj" />
+    <Project Path="PharmacyContracts.Modules.Auth.Infrastructure/PharmacyContracts.Modules.Auth.Infrastructure.csproj" />
+  </Folder>
+</Solution>
