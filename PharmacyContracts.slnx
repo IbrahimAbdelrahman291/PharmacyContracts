@@ -13,4 +13,10 @@
     <Project Path="PharmacyContracts.Modules.Auth.Domain/PharmacyContracts.Modules.Auth.Domain.csproj" />
     <Project Path="PharmacyContracts.Modules.Auth.Infrastructure/PharmacyContracts.Modules.Auth.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Companies/">
+    <Project Path="PharmacyContracts.Modules.Companies.Api/PharmacyContracts.Modules.Companies.Api.csproj" Id="116f5522-d931-40f8-8ecd-7b629b2e824b" />
+    <Project Path="PharmacyContracts.Modules.Companies.Application/PharmacyContracts.Modules.Companies.Application.csproj" Id="9c834c51-0b54-4bda-9368-2698a6ca4aef" />
+    <Project Path="PharmacyContracts.Modules.Companies.Domain/PharmacyContracts.Modules.Companies.Domain.csproj" Id="ecefe973-4f1d-4a7b-a0db-e0445de74603" />
+    <Project Path="PharmacyContracts.Modules.Companies.Infrastructure/PharmacyContracts.Modules.Companies.Infrastructure.csproj" Id="01722da4-bc8f-48d4-9d6a-b745c4067683" />
+  </Folder>
 </Solution>

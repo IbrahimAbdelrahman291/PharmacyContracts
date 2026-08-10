@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using PharmacyContracts.Api.Services;
 using PharmacyContracts.Modules.Auth.Api.Controllers;
 using PharmacyContracts.Modules.Auth.Application.DependencyInjection;
+using PharmacyContracts.Modules.Auth.Application.Interfaces;
 using PharmacyContracts.Modules.Auth.Infrastructure.Data;
 using PharmacyContracts.Modules.Auth.Infrastructure.DependencyInjection;
 using PharmacyContracts.Modules.Auth.Infrastructure.Seeding;
-using PharmacyContracts.Modules.Auth.Application.Interfaces;
-
+using PharmacyContracts.SharedKernel.Interfaces;
+using PharmacyContracts.Modules.Companies.Application.DependencyInjection;
+using PharmacyContracts.Modules.Companies.Infrastructure.DependencyInjection;
 using System.Text;
 
 public partial class Program
@@ -26,6 +29,14 @@ public partial class Program
         // Auth Module
         builder.Services.AddAuthInfrastructure(builder.Configuration);
         builder.Services.AddAuthApplication();
+        
+        // Cross-cutting: current user (من الـ JWT claims)
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+        // Companies Module
+        builder.Services.AddCompaniesInfrastructure(builder.Configuration);
+        builder.Services.AddCompaniesApplication();
 
         // JWT Authentication
         builder.Services.AddAuthentication(options =>
