@@ -19,4 +19,10 @@
     <Project Path="PharmacyContracts.Modules.Companies.Domain/PharmacyContracts.Modules.Companies.Domain.csproj" Id="ecefe973-4f1d-4a7b-a0db-e0445de74603" />
     <Project Path="PharmacyContracts.Modules.Companies.Infrastructure/PharmacyContracts.Modules.Companies.Infrastructure.csproj" Id="01722da4-bc8f-48d4-9d6a-b745c4067683" />
   </Folder>
+  <Folder Name="/src/Modules/Sales/">
+    <Project Path="PharmacyContracts.Modules.Sales.Api/PharmacyContracts.Modules.Sales.Api.csproj" Id="6919332d-8da1-455c-8e7c-715b9dddd435" />
+    <Project Path="PharmacyContracts.Modules.Sales.Application/PharmacyContracts.Modules.Sales.Application.csproj" Id="42e7f035-1096-45a9-a0c9-99ba1e6d15c3" />
+    <Project Path="PharmacyContracts.Modules.Sales.Domain/PharmacyContracts.Modules.Sales.Domain.csproj" Id="bc55ed4d-70d0-4615-9c56-3c6f8013247e" />
+    <Project Path="PharmacyContracts.Modules.Sales.Infrastructure/PharmacyContracts.Modules.Sales.Infrastructure.csproj" Id="7d0d5fa7-8aa4-4108-9ab4-0554ba122aa8" />
+  </Folder>
 </Solution>

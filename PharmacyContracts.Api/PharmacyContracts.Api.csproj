@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.24" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.24" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
@@ -23,6 +25,9 @@
     <ProjectReference Include="..\PharmacyContracts.Modules.Companies.Api\PharmacyContracts.Modules.Companies.Api.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Companies.Application\PharmacyContracts.Modules.Companies.Application.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Companies.Infrastructure\PharmacyContracts.Modules.Companies.Infrastructure.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Sales.Api\PharmacyContracts.Modules.Sales.Api.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Sales.Application\PharmacyContracts.Modules.Sales.Application.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Sales.Infrastructure\PharmacyContracts.Modules.Sales.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
