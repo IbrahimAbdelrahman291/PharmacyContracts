@@ -42,7 +42,7 @@ public class SalesRowValidator : ISalesRowValidator
             var trimmedStatus = row.RawStatus.Trim();
             if (trimmedStatus == "مبيعات")
                 status = SalesRecordStatus.Sale;
-            else if (trimmedStatus == "مرتجعات")
+            else if (trimmedStatus == "[مرتجعات]")
                 status = SalesRecordStatus.Return;
             else
                 rowErrors.Add(Error(row.RowNumber, "مبيعات", "القيمة يجب أن تكون 'مبيعات' أو 'مرتجعات' فقط."));

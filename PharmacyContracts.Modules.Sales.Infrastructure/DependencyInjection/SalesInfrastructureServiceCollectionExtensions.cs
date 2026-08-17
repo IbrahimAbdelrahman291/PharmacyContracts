@@ -1,5 +1,4 @@
-﻿// DependencyInjection/SalesInfrastructureServiceCollectionExtensions.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PharmacyContracts.Modules.Sales.Application.Interfaces;
@@ -14,7 +13,7 @@ namespace PharmacyContracts.Modules.Sales.Infrastructure.DependencyInjection;
 
 public static class SalesInfrastructureServiceCollectionExtensions
 {
-    public static IServiceCollection AddSalesInfrastructure(this IServiceCollection services, IConfiguration configuration, string webRootPath)
+    public static IServiceCollection AddSalesInfrastructure(this IServiceCollection services, IConfiguration configuration, string? webRootPath)
     {
         services.AddDbContext<SalesDbContext>(options =>
             options.UseSqlServer(
@@ -26,10 +25,25 @@ public static class SalesInfrastructureServiceCollectionExtensions
         services.AddScoped<IExcelSalesFileParser, ExcelSalesFileParser>();
         services.AddScoped<ISalesBackgroundJobEnqueuer, HangfireSalesBackgroundJobEnqueuer>();
 
-        var uploadsRootPath = Path.Combine(webRootPath, "pending-uploads");
+        // مهم: webRootPath ممكن تيجي null على بعض بيئات الاستضافة
+        var effectiveWebRootPath = string.IsNullOrWhiteSpace(webRootPath)
+            ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
+            : webRootPath;
+
+        var uploadsRootPath = Path.Combine(effectiveWebRootPath, "pending-uploads");
+
+        try
+        {
+            Directory.CreateDirectory(uploadsRootPath);
+        }
+        catch (Exception)
+        {
+            // منوقفش التطبيق كله بسبب مشكلة صلاحيات على فولدر واحد
+            // هنحاول تاني وقت أول رفع فعلي في SalesFileStorageService.SaveAsync
+        }
+
         services.AddScoped<ISalesFileStorageService>(_ => new SalesFileStorageService(uploadsRootPath));
 
-        // الـ Hangfire Job classes نفسها لازم تتسجل في الـ DI عشان تقدر تاخد dependencies
         services.AddScoped<ProcessSalesBatchJob>();
         services.AddScoped<SalesBatchRecoverySweepJob>();
 

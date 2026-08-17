@@ -76,7 +76,8 @@ public partial class Program
                 SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
                 QueuePollInterval = TimeSpan.Zero,
                 UseRecommendedIsolationLevel = true,
-                DisableGlobalLocks = true
+                DisableGlobalLocks = true,
+                PrepareSchemaIfNecessary = false
             }));
 
         builder.Services.AddHangfireServer(options =>
@@ -154,7 +155,7 @@ public partial class Program
         RecurringJob.AddOrUpdate<SalesBatchRecoverySweepJob>(
             "sales-batch-recovery-sweep",
             job => job.ExecuteAsync(CancellationToken.None),
-            "* * * * *"); // كل دقيقة (أقل قيمة ممكنة في cron syntax عادي)
+            "*/5 * * * *"); // كل دقيقة (أقل قيمة ممكنة في cron syntax عادي)
 
         app.Run();
     }
