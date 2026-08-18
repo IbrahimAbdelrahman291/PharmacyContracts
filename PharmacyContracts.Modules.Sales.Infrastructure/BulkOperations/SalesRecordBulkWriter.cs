@@ -16,7 +16,7 @@ public class SalesRecordBulkWriter : ISalesRecordBulkWriter
     public SalesRecordBulkWriter(SalesDbContext context) => _context = context;
 
     public async Task<int> BulkInsertAsync(List<SalesRecord> records, Guid batchId,
-        Action<int>? onProgressBatchCompleted = null, CancellationToken cancellationToken = default)
+    Action<int>? onProgressBatchCompleted = null, CancellationToken cancellationToken = default)
     {
         var connection = (SqlConnection)_context.Database.GetDbConnection();
         var connectionWasClosed = connection.State != ConnectionState.Open;
@@ -24,13 +24,10 @@ public class SalesRecordBulkWriter : ISalesRecordBulkWriter
         if (connectionWasClosed)
             await connection.OpenAsync(cancellationToken);
 
-        // كل العملية (bulk copy للـ staging + move للجدول الرئيسي + تنضيف الـ staging)
-        // جوه transaction واحدة - لو أي خطوة فشلت، كل حاجة بترجع زي ما كانت
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            // 1) SqlBulkCopy للـ staging table
             using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)transaction))
             {
                 bulkCopy.DestinationTableName = "sales.SalesRecordsStaging";
@@ -38,29 +35,54 @@ public class SalesRecordBulkWriter : ISalesRecordBulkWriter
                 bulkCopy.NotifyAfter = BulkCopyBatchSize;
                 bulkCopy.SqlRowsCopied += (sender, e) => onProgressBatchCompleted?.Invoke((int)e.RowsCopied);
 
+                bulkCopy.ColumnMappings.Add("Id", "Id");
+                bulkCopy.ColumnMappings.Add("PharmacyId", "PharmacyId");
+                bulkCopy.ColumnMappings.Add("UploadBatchId", "UploadBatchId");
+                bulkCopy.ColumnMappings.Add("BranchName", "BranchName");
+                bulkCopy.ColumnMappings.Add("CustomerCompanyName", "CustomerCompanyName");
+                bulkCopy.ColumnMappings.Add("SaleDate", "SaleDate");
+                bulkCopy.ColumnMappings.Add("ImportedItemsTotal", "ImportedItemsTotal");
+                bulkCopy.ColumnMappings.Add("LocalItemsTotal", "LocalItemsTotal");
+                bulkCopy.ColumnMappings.Add("GrossTotal", "GrossTotal");
+                bulkCopy.ColumnMappings.Add("DiscountOnTotal", "DiscountOnTotal");
+                bulkCopy.ColumnMappings.Add("DiscountOnItems", "DiscountOnItems");
+                bulkCopy.ColumnMappings.Add("SubTotal", "SubTotal");
+                bulkCopy.ColumnMappings.Add("RemainingAmount", "RemainingAmount");
+                bulkCopy.ColumnMappings.Add("Status", "Status");
+                bulkCopy.ColumnMappings.Add("CreatedAt", "CreatedAt");
+                bulkCopy.ColumnMappings.Add("IsDeleted", "IsDeleted");
+
                 var dataTable = BuildDataTable(records, batchId);
                 await bulkCopy.WriteToServerAsync(dataTable, cancellationToken);
             }
 
-            // 2) نقل الصفوف من الـ staging للجدول الرئيسي، مفلترة بالـ BatchId فقط
-            //    (عشان لو فيه batch تانية شغالة بالتوازي، منلمسش صفوفها)
-            const string moveSql = @"
-                INSERT INTO sales.SalesRecords
-                    (Id, PharmacyId, UploadBatchId, BranchName, CustomerCompanyName, SaleDate,
-                     ImportedItemsTotal, LocalItemsTotal, GrossTotal, DiscountOnTotal, DiscountOnItems,
-                     SubTotal, RemainingAmount, Status, CreatedAt, IsDeleted)
-                SELECT
-                    Id, PharmacyId, UploadBatchId, BranchName, CustomerCompanyName, SaleDate,
-                    ImportedItemsTotal, LocalItemsTotal, GrossTotal, DiscountOnTotal, DiscountOnItems,
-                    SubTotal, RemainingAmount, Status, CreatedAt, IsDeleted
-                FROM sales.SalesRecordsStaging
-                WHERE UploadBatchId = @BatchId;
+            // خطوة منفصلة: النقل الفعلي، ونمسك عدد الصفوف المنقولة فقط
+            const string insertSql = @"
+            INSERT INTO sales.SalesRecords
+                (Id, PharmacyId, UploadBatchId, BranchName, CustomerCompanyName, SaleDate,
+                 ImportedItemsTotal, LocalItemsTotal, GrossTotal, DiscountOnTotal, DiscountOnItems,
+                 SubTotal, RemainingAmount, Status, CreatedAt, IsDeleted)
+            SELECT
+                Id, PharmacyId, UploadBatchId, BranchName, CustomerCompanyName, SaleDate,
+                ImportedItemsTotal, LocalItemsTotal, GrossTotal, DiscountOnTotal, DiscountOnItems,
+                SubTotal, RemainingAmount, Status, CreatedAt, IsDeleted
+            FROM sales.SalesRecordsStaging
+            WHERE UploadBatchId = @BatchId;";
 
-                DELETE FROM sales.SalesRecordsStaging WHERE UploadBatchId = @BatchId;";
+            int movedRows;
+            await using (var insertCommand = new SqlCommand(insertSql, connection, (SqlTransaction)transaction))
+            {
+                insertCommand.Parameters.AddWithValue("@BatchId", batchId);
+                movedRows = await insertCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
 
-            await using var moveCommand = new SqlCommand(moveSql, connection, (SqlTransaction)transaction);
-            moveCommand.Parameters.AddWithValue("@BatchId", batchId);
-            var movedRows = await moveCommand.ExecuteNonQueryAsync(cancellationToken);
+            // خطوة منفصلة تانية: التنظيف، مش بنحسب عدد صفوفها في الـ result
+            const string deleteSql = "DELETE FROM sales.SalesRecordsStaging WHERE UploadBatchId = @BatchId;";
+            await using (var deleteCommand = new SqlCommand(deleteSql, connection, (SqlTransaction)transaction))
+            {
+                deleteCommand.Parameters.AddWithValue("@BatchId", batchId);
+                await deleteCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
 
             await transaction.CommitAsync(cancellationToken);
 

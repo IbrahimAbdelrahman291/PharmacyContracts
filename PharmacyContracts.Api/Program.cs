@@ -19,6 +19,9 @@ using PharmacyContracts.Modules.Sales.Application.DependencyInjection;
 using PharmacyContracts.Modules.Sales.Infrastructure.BackgroundJobs;
 using PharmacyContracts.Modules.Sales.Infrastructure.DependencyInjection;
 using PharmacyContracts.SharedKernel.Interfaces;
+using PharmacyContracts.Modules.Claims.Api.Controllers;
+using PharmacyContracts.Modules.Claims.Application.DependencyInjection;
+using PharmacyContracts.Modules.Claims.Infrastructure.DependencyInjection;
 
 public partial class Program
 {
@@ -30,8 +33,8 @@ public partial class Program
         builder.Services.AddControllers()
             .AddApplicationPart(typeof(AuthController).Assembly)
             .AddApplicationPart(typeof(CompaniesController).Assembly)
-            .AddApplicationPart(typeof(SalesBatchesController).Assembly);
-
+            .AddApplicationPart(typeof(SalesBatchesController).Assembly)
+            .AddApplicationPart(typeof(ClaimsController).Assembly);
         // Swagger
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -63,6 +66,10 @@ public partial class Program
         // Sales Module
         builder.Services.AddSalesInfrastructure(builder.Configuration, builder.Environment.WebRootPath);
         builder.Services.AddSalesApplication();
+
+        // Claims Module
+        builder.Services.AddClaimsInfrastructure();
+        builder.Services.AddClaimsApplication();
 
         // Hangfire
         builder.Services.AddHangfire(config => config

@@ -6,8 +6,10 @@ using PharmacyContracts.Modules.Sales.Infrastructure.BackgroundJobs;
 using PharmacyContracts.Modules.Sales.Infrastructure.BulkOperations;
 using PharmacyContracts.Modules.Sales.Infrastructure.Data;
 using PharmacyContracts.Modules.Sales.Infrastructure.Parsing;
+using PharmacyContracts.Modules.Sales.Infrastructure.Queries;
 using PharmacyContracts.Modules.Sales.Infrastructure.Repositories;
 using PharmacyContracts.Modules.Sales.Infrastructure.Storage;
+using PharmacyContracts.SharedKernel.Interfaces;
 
 namespace PharmacyContracts.Modules.Sales.Infrastructure.DependencyInjection;
 
@@ -24,6 +26,7 @@ public static class SalesInfrastructureServiceCollectionExtensions
         services.AddScoped<ISalesRecordBulkWriter, SalesRecordBulkWriter>();
         services.AddScoped<IExcelSalesFileParser, ExcelSalesFileParser>();
         services.AddScoped<ISalesBackgroundJobEnqueuer, HangfireSalesBackgroundJobEnqueuer>();
+        services.AddScoped<ISalesQueryService, SalesQueryService>();
 
         // مهم: webRootPath ممكن تيجي null على بعض بيئات الاستضافة
         var effectiveWebRootPath = string.IsNullOrWhiteSpace(webRootPath)

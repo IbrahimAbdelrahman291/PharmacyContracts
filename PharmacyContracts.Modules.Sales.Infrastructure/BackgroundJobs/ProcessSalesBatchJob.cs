@@ -1,6 +1,7 @@
 ﻿// BackgroundJobs/ProcessSalesBatchJob.cs
 using Hangfire;
 using Microsoft.Extensions.Logging;
+using PharmacyContracts.Modules.Sales.Application.DTOs;
 using PharmacyContracts.Modules.Sales.Application.Interfaces;
 using PharmacyContracts.Modules.Sales.Domain.Enums;
 
@@ -62,9 +63,12 @@ public class ProcessSalesBatchJob
                 return;
             }
 
-            await using var fileStream = _fileStorageService.OpenRead(batch.LocalFilePath);
+            List<ParsedSalesRowDto> parsedRows;
+            await using (var fileStream = _fileStorageService.OpenRead(batch.LocalFilePath))
+            {
+                parsedRows = _fileParser.ParseRows(fileStream);
+            }
 
-            var parsedRows = _fileParser.ParseRows(fileStream);
             var (errors, records) = _rowValidator.ValidateAndMap(parsedRows, batch.PharmacyId, batch.Id);
 
             if (errors.Count > 0)

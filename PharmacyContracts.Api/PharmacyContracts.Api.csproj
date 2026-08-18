@@ -22,6 +22,9 @@
     <ProjectReference Include="..\PharmacyContracts.Modules.Auth.Api\PharmacyContracts.Modules.Auth.Api.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Auth.Application\PharmacyContracts.Modules.Auth.Application.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Auth.Infrastructure\PharmacyContracts.Modules.Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Claims.Api\PharmacyContracts.Modules.Claims.Api.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Claims.Application\PharmacyContracts.Modules.Claims.Application.csproj" />
+    <ProjectReference Include="..\PharmacyContracts.Modules.Claims.Infrastructure\PharmacyContracts.Modules.Claims.Infrastructure.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Companies.Api\PharmacyContracts.Modules.Companies.Api.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Companies.Application\PharmacyContracts.Modules.Companies.Application.csproj" />
     <ProjectReference Include="..\PharmacyContracts.Modules.Companies.Infrastructure\PharmacyContracts.Modules.Companies.Infrastructure.csproj" />

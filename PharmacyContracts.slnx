@@ -13,6 +13,12 @@
     <Project Path="PharmacyContracts.Modules.Auth.Domain/PharmacyContracts.Modules.Auth.Domain.csproj" />
     <Project Path="PharmacyContracts.Modules.Auth.Infrastructure/PharmacyContracts.Modules.Auth.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Claims/">
+    <Project Path="PharmacyContracts.Modules.Claims.Api/PharmacyContracts.Modules.Claims.Api.csproj" Id="a0918652-da48-4bdd-a2f2-2eb8fa578873" />
+    <Project Path="PharmacyContracts.Modules.Claims.Application/PharmacyContracts.Modules.Claims.Application.csproj" Id="6f286b1a-8ad6-4b00-b43b-97ab2ee10766" />
+    <Project Path="PharmacyContracts.Modules.Claims.Domain/PharmacyContracts.Modules.Claims.Domain.csproj" Id="fb015dc4-2d6d-43be-afa6-94b61c7cf856" />
+    <Project Path="PharmacyContracts.Modules.Claims.Infrastructure/PharmacyContracts.Modules.Claims.Infrastructure.csproj" Id="91490fd1-9eda-4e15-a6c4-c84009e457aa" />
+  </Folder>
   <Folder Name="/src/Modules/Companies/">
     <Project Path="PharmacyContracts.Modules.Companies.Api/PharmacyContracts.Modules.Companies.Api.csproj" Id="116f5522-d931-40f8-8ecd-7b629b2e824b" />
     <Project Path="PharmacyContracts.Modules.Companies.Application/PharmacyContracts.Modules.Companies.Application.csproj" Id="9c834c51-0b54-4bda-9368-2698a6ca4aef" />
