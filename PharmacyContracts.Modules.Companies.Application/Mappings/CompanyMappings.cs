@@ -16,6 +16,7 @@ public static class CompanyMappings
             TaxPercentage = company.TaxPercentage,
             AdministrativeExpensesPercentage = company.AdministrativeExpensesPercentage,
             ChequeSettlementPeriodInDays = company.ChequeSettlementPeriodInDays,
+            Discount = company.Discount,
             CreatedAt = company.CreatedAt
         };
     }
@@ -30,6 +31,7 @@ public static class CompanyMappings
             TaxPercentage = dto.TaxPercentage,
             AdministrativeExpensesPercentage = dto.AdministrativeExpensesPercentage,
             ChequeSettlementPeriodInDays = dto.ChequeSettlementPeriodInDays,
+            Discount = dto.Discount,
             PharmacyId = pharmacyId
         };
     }
@@ -42,5 +44,6 @@ public static class CompanyMappings
         company.TaxPercentage = dto.TaxPercentage;
         company.AdministrativeExpensesPercentage = dto.AdministrativeExpensesPercentage;
         company.ChequeSettlementPeriodInDays = dto.ChequeSettlementPeriodInDays;
+        company.Discount = dto.Discount;
     }
 }

@@ -13,6 +13,7 @@ namespace PharmacyContracts.Modules.Companies.Domain.Entities
         public decimal TaxPercentage { get; set; }
         public decimal AdministrativeExpensesPercentage { get; set; }
         public int ChequeSettlementPeriodInDays { get; set; }
+        public decimal Discount { get; set; }
 
         // مفيش navigation property لـ Auth module - Companies module مستقل تمامًا
         public Guid PharmacyId { get; set; }

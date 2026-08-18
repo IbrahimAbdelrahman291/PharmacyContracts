@@ -12,5 +12,7 @@ namespace PharmacyContracts.Modules.Companies.Application.DTOs
         public decimal TaxPercentage { get; set; }
         public decimal AdministrativeExpensesPercentage { get; set; }
         public int ChequeSettlementPeriodInDays { get; set; }
+        public decimal Discount { get; set; }   
+
     }
 }

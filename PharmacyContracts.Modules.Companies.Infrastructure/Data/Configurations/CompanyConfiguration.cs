@@ -15,6 +15,7 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.ImportedDiscountPercentage).HasColumnType("decimal(5,2)");
         builder.Property(c => c.TaxPercentage).HasColumnType("decimal(5,2)");
         builder.Property(c => c.AdministrativeExpensesPercentage).HasColumnType("decimal(5,2)");
+        builder.Property(c => c.Discount).HasColumnType("decimal(5,2)");
         builder.HasIndex(c => new { c.PharmacyId, c.Name });
     }
 }

@@ -13,5 +13,6 @@ public class UpdateCompanyRequestValidator : AbstractValidator<UpdateCompanyRequ
         RuleFor(x => x.TaxPercentage).InclusiveBetween(0, 100);
         RuleFor(x => x.AdministrativeExpensesPercentage).InclusiveBetween(0, 100);
         RuleFor(x => x.ChequeSettlementPeriodInDays).GreaterThan(0);
+        RuleFor(x => x.Discount).InclusiveBetween(0, 100);
     }
 }
