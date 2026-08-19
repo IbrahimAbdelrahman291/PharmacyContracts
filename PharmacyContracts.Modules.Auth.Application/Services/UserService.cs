@@ -2,6 +2,7 @@
 using PharmacyContracts.Modules.Auth.Application.DTOs;
 using PharmacyContracts.Modules.Auth.Application.Interfaces;
 using PharmacyContracts.Modules.Auth.Application.Mappings;
+using PharmacyContracts.Modules.Auth.Domain.Entities;
 using PharmacyContracts.Modules.Auth.Domain.Enums;
 using PharmacyContracts.SharedKernel.Wrappers;
 
@@ -53,5 +54,25 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
+    }
+    public async Task<Result<UserResponseDto>> CreateReviewerAsync(Guid pharmacyId, CreateReviewerRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var existing = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        if (existing is not null)
+            return Result<UserResponseDto>.Failure("Email already exists.");
+
+        var user = new User
+        {
+            Email = request.Email,
+            PasswordHash = _passwordHasher.Hash(request.Password),
+            Role = UserRole.ClaimsReviewer,
+            PharmacyId = pharmacyId,
+            IsActive = true
+        };
+
+        await _userRepository.AddAsync(user, cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
+
+        return Result<UserResponseDto>.Success(user.ToResponseDto());
     }
 }

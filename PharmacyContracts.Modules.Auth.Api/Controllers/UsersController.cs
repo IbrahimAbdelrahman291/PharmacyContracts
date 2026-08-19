@@ -1,9 +1,9 @@
-﻿// Controllers/UsersController.cs
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PharmacyContracts.Modules.Auth.Application.DTOs;
 using PharmacyContracts.Modules.Auth.Application.Interfaces;
+using PharmacyContracts.SharedKernel.Interfaces;
 
 namespace PharmacyContracts.Modules.Auth.Api.Controllers;
 
@@ -14,11 +14,16 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IValidator<CreateUserRequestDto> _createValidator;
+    private readonly ICurrentUserService _currentUserService;   // ← جديد
 
-    public UsersController(IUserService userService, IValidator<CreateUserRequestDto> createValidator)
+    public UsersController(
+        IUserService userService,
+        IValidator<CreateUserRequestDto> createValidator,
+        ICurrentUserService currentUserService)   // ← جديد
     {
         _userService = userService;
         _createValidator = createValidator;
+        _currentUserService = currentUserService;   // ← جديد
     }
 
     [HttpPost]
@@ -29,6 +34,18 @@ public class UsersController : ControllerBase
             return BadRequest(new { errors = validationResult.Errors.Select(e => e.ErrorMessage) });
 
         var result = await _userService.CreateUserAsync(request, cancellationToken);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors });
+
+        return CreatedAtAction(nameof(GetAll), null, result.Data);
+    }
+
+    [HttpPost("reviewers")]
+    [Authorize(Roles = "Pharmacy")]
+    public async Task<IActionResult> CreateReviewer([FromBody] CreateReviewerRequestDto request, CancellationToken cancellationToken)
+    {
+        var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
+        var result = await _userService.CreateReviewerAsync(pharmacyId, request, cancellationToken);
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors });
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PharmacyContracts.Modules.Sales.Domain.Enums;
 using PharmacyContracts.Modules.Sales.Infrastructure.Data;
 using PharmacyContracts.SharedKernel.Contracts;
 using PharmacyContracts.SharedKernel.Interfaces;
@@ -74,6 +75,30 @@ public class SalesQueryService : ISalesQueryService
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize,
             TotalCount = totalCount
+        };
+    }
+    public async Task<CompanyInsightsContract> GetCompanyInsightsAsync(
+    Guid pharmacyId, string companyName, int month, int year, CancellationToken cancellationToken = default)
+    {
+        var query = _context.SalesRecords
+            .Where(r => r.PharmacyId == pharmacyId
+                && r.CustomerCompanyName == companyName
+                && r.SaleDate.Month == month
+                && r.SaleDate.Year == year);
+
+        var salesCount = await query.CountAsync(r => r.Status == SalesRecordStatus.Sale, cancellationToken);
+        var returnsCount = await query.CountAsync(r => r.Status == SalesRecordStatus.Return, cancellationToken);
+
+        var totalRemaining = await query.SumAsync(r => r.RemainingAmount, cancellationToken);
+        var totalLocalDiscount = await query.SumAsync(r => r.DiscountOnItems, cancellationToken);
+        var totalImportedDiscount = await query.SumAsync(r => r.DiscountOnTotal, cancellationToken);
+
+        return new CompanyInsightsContract
+        {
+            PrescriptionsCount = salesCount - returnsCount,
+            TotalRemainingAmount = totalRemaining,
+            TotalLocalDiscount = totalLocalDiscount,
+            TotalImportedDiscount = totalImportedDiscount
         };
     }
 }

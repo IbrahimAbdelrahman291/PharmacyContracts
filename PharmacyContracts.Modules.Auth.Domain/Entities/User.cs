@@ -12,5 +12,7 @@ namespace PharmacyContracts.Modules.Auth.Domain.Entities
 
         // بيتملى لو Role = Pharmacy بس
         public string? PharmacyName { get; set; }
+        // بيتملى بس لو Role = ClaimsReviewer، وبيشاور على Id بتاع حساب الصيدلية الأصلي
+        public Guid? PharmacyId { get; set; }
     }
 }

@@ -7,6 +7,7 @@ namespace PharmacyContracts.Modules.Auth.Domain.Enums
     public enum UserRole
     {
         SuperAdmin = 1,
-        Pharmacy = 2
+        Pharmacy = 2,
+        ClaimsReviewer = 3
     }
 }

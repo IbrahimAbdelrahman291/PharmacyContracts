@@ -16,4 +16,7 @@ public interface ISalesQueryService
     Task<PagedResult<SalesRecordProfileContract>> GetCompanyProfileAsync(
         Guid pharmacyId, string companyName, int? month, int? year,
         PaginationParams pagination, CancellationToken cancellationToken = default);
+
+    Task<CompanyInsightsContract> GetCompanyInsightsAsync(
+    Guid pharmacyId, string companyName, int month, int year, CancellationToken cancellationToken = default);
 }
