@@ -11,6 +11,7 @@ namespace PharmacyContracts.Modules.Claims.Application.DependencyInjection
             services.AddScoped<IBranchService, BranchService>();
             services.AddScoped<IClaimsPivotService, ClaimsPivotService>();
             services.AddScoped<ICompanyProfileService, CompanyProfileService>();
+            services.AddScoped<ICompanyInsightsService, CompanyInsightsService>();
 
             return services;
         }

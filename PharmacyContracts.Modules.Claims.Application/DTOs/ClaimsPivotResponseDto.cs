@@ -8,5 +8,6 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
     {
         public List<string> Branches { get; set; } = new();
         public List<CompanyPivotRowDto> Rows { get; set; } = new();
+        public PivotTotalsRowDto TotalsRow { get; set; } = new();   // ← جديد
     }
 }

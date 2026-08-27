@@ -8,5 +8,7 @@ namespace PharmacyContracts.SharedKernel.Interfaces
     {
         Task<decimal> GetDiscountPercentageAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default);
         Task<int> GetChequeSettlementPeriodInDaysAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default);
+        Task<Dictionary<string, decimal>> GetDiscountPercentagesAsync(
+        Guid pharmacyId, IEnumerable<string> companyNames, CancellationToken cancellationToken = default);
     }
 }

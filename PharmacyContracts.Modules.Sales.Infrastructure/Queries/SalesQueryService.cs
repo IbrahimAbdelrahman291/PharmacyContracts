@@ -90,15 +90,15 @@ public class SalesQueryService : ISalesQueryService
         var returnsCount = await query.CountAsync(r => r.Status == SalesRecordStatus.Return, cancellationToken);
 
         var totalRemaining = await query.SumAsync(r => r.RemainingAmount, cancellationToken);
-        var totalLocalDiscount = await query.SumAsync(r => r.DiscountOnItems, cancellationToken);
-        var totalImportedDiscount = await query.SumAsync(r => r.DiscountOnTotal, cancellationToken);
+        var totalLocalItems = await query.SumAsync(r => r.LocalItemsTotal, cancellationToken);
+        var totalImportedItems = await query.SumAsync(r => r.ImportedItemsTotal, cancellationToken);
 
         return new CompanyInsightsContract
         {
             PrescriptionsCount = salesCount - returnsCount,
             TotalRemainingAmount = totalRemaining,
-            TotalLocalDiscount = totalLocalDiscount,
-            TotalImportedDiscount = totalImportedDiscount
+            TotalLocalItemsAmount = totalLocalItems,
+            TotalImportedItemsAmount = totalImportedItems
         };
     }
 }
