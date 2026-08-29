@@ -12,6 +12,7 @@ public static class CompaniesApplicationServiceCollectionExtensions
     {
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddValidatorsFromAssemblyContaining<CreateCompanyRequestValidator>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
 
         return services;
     }

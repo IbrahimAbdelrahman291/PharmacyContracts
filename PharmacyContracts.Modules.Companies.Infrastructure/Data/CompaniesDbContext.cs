@@ -8,6 +8,7 @@ public class CompaniesDbContext : DbContext
     public CompaniesDbContext(DbContextOptions<CompaniesDbContext> options) : base(options) { }
 
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<CompanyDepartment> CompanyDepartments => Set<CompanyDepartment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

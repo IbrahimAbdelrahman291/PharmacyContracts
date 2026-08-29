@@ -49,5 +49,19 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
 
             return result;
         }
+        public async Task<List<string>> GetDepartmentNamesAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
+        {
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name == companyName, cancellationToken);
+
+            if (company is null)
+                return new List<string>();
+
+            return await _context.CompanyDepartments
+                .Where(d => d.CompanyId == company.Id)
+                .Select(d => d.Name)
+                .OrderBy(n => n)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
