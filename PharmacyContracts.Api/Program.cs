@@ -1,4 +1,3 @@
-using System.Text;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,6 +10,10 @@ using PharmacyContracts.Modules.Auth.Application.Interfaces;
 using PharmacyContracts.Modules.Auth.Infrastructure.Data;
 using PharmacyContracts.Modules.Auth.Infrastructure.DependencyInjection;
 using PharmacyContracts.Modules.Auth.Infrastructure.Seeding;
+using PharmacyContracts.Modules.Claims.Api.Controllers;
+using PharmacyContracts.Modules.Claims.Application.DependencyInjection;
+using PharmacyContracts.Modules.Claims.Infrastructure.BackgroundJobs;
+using PharmacyContracts.Modules.Claims.Infrastructure.DependencyInjection;
 using PharmacyContracts.Modules.Companies.Api.Controllers;
 using PharmacyContracts.Modules.Companies.Application.DependencyInjection;
 using PharmacyContracts.Modules.Companies.Infrastructure.DependencyInjection;
@@ -19,9 +22,7 @@ using PharmacyContracts.Modules.Sales.Application.DependencyInjection;
 using PharmacyContracts.Modules.Sales.Infrastructure.BackgroundJobs;
 using PharmacyContracts.Modules.Sales.Infrastructure.DependencyInjection;
 using PharmacyContracts.SharedKernel.Interfaces;
-using PharmacyContracts.Modules.Claims.Api.Controllers;
-using PharmacyContracts.Modules.Claims.Application.DependencyInjection;
-using PharmacyContracts.Modules.Claims.Infrastructure.DependencyInjection;
+using System.Text;
 
 public partial class Program
 {
@@ -34,7 +35,9 @@ public partial class Program
             .AddApplicationPart(typeof(AuthController).Assembly)
             .AddApplicationPart(typeof(CompaniesController).Assembly)
             .AddApplicationPart(typeof(SalesBatchesController).Assembly)
-            .AddApplicationPart(typeof(ClaimsController).Assembly);
+            .AddApplicationPart(typeof(ClaimsController).Assembly)
+            .AddApplicationPart(typeof(ClaimsManagementController).Assembly)    
+            .AddApplicationPart(typeof(ChequesController).Assembly);
         // Swagger
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -68,7 +71,7 @@ public partial class Program
         builder.Services.AddSalesApplication();
 
         // Claims Module
-        builder.Services.AddClaimsInfrastructure();
+        builder.Services.AddClaimsInfrastructure(builder.Configuration);
         builder.Services.AddClaimsApplication();
 
         // Hangfire
@@ -163,7 +166,11 @@ public partial class Program
             "sales-batch-recovery-sweep",
             job => job.ExecuteAsync(CancellationToken.None),
             "*/5 * * * *"); // كل دقيقة (أقل قيمة ممكنة في cron syntax عادي)
-
+        
+        RecurringJob.AddOrUpdate<ChequeOverdueSweepJob>(
+            "cheque-overdue-sweep",
+            job => job.ExecuteAsync(CancellationToken.None),
+            Cron.Daily());   // كل يوم الساعة 12 بالليل (UTC)
         app.Run();
     }
 }
