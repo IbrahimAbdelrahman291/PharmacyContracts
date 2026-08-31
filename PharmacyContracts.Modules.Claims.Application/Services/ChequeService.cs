@@ -54,7 +54,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         }
 
         public async Task<Result<List<ChequeResponseDto>>> CreateAsync(
-            Guid pharmacyId, Guid claimId, CreateChequesRequestDto request, CancellationToken cancellationToken = default)
+    Guid pharmacyId, Guid claimId, CreateChequesRequestDto request, CancellationToken cancellationToken = default)
         {
             var claim = await _claimRepository.GetByIdAsync(claimId, cancellationToken);
             if (claim is null || claim.PharmacyId != pharmacyId)
@@ -69,6 +69,27 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             if (request.Allocations.Count == 0)
                 return Result<List<ChequeResponseDto>>.Failure("يجب تحديد توزيع واحد على الأقل.");
+
+            // تحقق جديد: لو الشركة من غير إدارات، لازم يكون allocation واحد بس بـ DepartmentName = null
+            var registeredDepartments = await _companiesQueryService.GetDepartmentNamesAsync(pharmacyId, claim.CompanyName, cancellationToken);
+
+            if (registeredDepartments.Count == 0 && request.Allocations.Count > 1)
+                return Result<List<ChequeResponseDto>>.Failure("هذه الشركة ليس لديها إدارات تابعة، يجب إرسال توزيع واحد فقط.");
+
+            if (registeredDepartments.Count == 0 && request.Allocations[0].DepartmentName is not null)
+                return Result<List<ChequeResponseDto>>.Failure("هذه الشركة ليس لديها إدارات تابعة، اترك اسم الإدارة فارغًا.");
+
+            // تحقق إضافي: لو الشركة عندها إدارات، كل الأسماء المُرسلة لازم تكون من ضمن الإدارات المسجلة فعليًا
+            if (registeredDepartments.Count > 0)
+            {
+                var invalidNames = request.Allocations
+                    .Select(a => a.DepartmentName)
+                    .Where(name => name is null || !registeredDepartments.Contains(name))
+                    .ToList();
+
+                if (invalidNames.Count > 0)
+                    return Result<List<ChequeResponseDto>>.Failure("يجب اختيار أسماء إدارات مسجلة فعليًا لدى هذه الشركة.");
+            }
 
             var allocationsSum = request.Allocations.Sum(a => a.Amount);
             if (allocationsSum != claim.CorrectedAmount.Value)
