@@ -20,6 +20,7 @@ public static class CompaniesInfrastructureServiceCollectionExtensions
 
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<ICompaniesQueryService, CompaniesQueryService>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
         return services;
     }

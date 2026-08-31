@@ -9,7 +9,7 @@ namespace PharmacyContracts.Modules.Auth.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/users")]
-[Authorize(Roles = "SuperAdmin")]
+
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -27,6 +27,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequestDto request, CancellationToken cancellationToken)
     {
         var validationResult = await _createValidator.ValidateAsync(request, cancellationToken);
@@ -53,6 +54,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await _userService.GetAllAsync(cancellationToken);
@@ -60,6 +62,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateUserStatusRequestDto request, CancellationToken cancellationToken)
     {
         var result = await _userService.UpdateStatusAsync(id, request.IsActive, cancellationToken);

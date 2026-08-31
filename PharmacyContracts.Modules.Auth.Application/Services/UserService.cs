@@ -61,12 +61,18 @@ public class UserService : IUserService
         if (existing is not null)
             return Result<UserResponseDto>.Failure("Email already exists.");
 
+        // نجيب اسم الصيدلية الأم عشان نعمله snapshot على حساب المراجع
+        var pharmacyUser = await _userRepository.GetByIdAsync(pharmacyId, cancellationToken);
+        if (pharmacyUser is null)
+            return Result<UserResponseDto>.Failure("Pharmacy account not found.");
+
         var user = new User
         {
             Email = request.Email,
             PasswordHash = _passwordHasher.Hash(request.Password),
             Role = UserRole.ClaimsReviewer,
             PharmacyId = pharmacyId,
+            PharmacyName = pharmacyUser.PharmacyName,   // ← الإضافة
             IsActive = true
         };
 
