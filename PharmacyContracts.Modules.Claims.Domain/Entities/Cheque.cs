@@ -10,6 +10,9 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
         public string CompanyName { get; set; } = string.Empty;
         public string? DepartmentName { get; set; }
 
+        public int ClaimMonth { get; set; }  
+        public int ClaimYear { get; set; }
+
         public decimal Amount { get; set; }
 
         public DateTime StartDate { get; set; }

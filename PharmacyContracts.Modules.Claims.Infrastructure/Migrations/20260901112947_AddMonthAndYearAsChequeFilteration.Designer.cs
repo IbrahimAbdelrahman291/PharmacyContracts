@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PharmacyContracts.Modules.Claims.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using PharmacyContracts.Modules.Claims.Infrastructure.Data;
 namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
 {
     [DbContext(typeof(ClaimsDbContext))]
-    partial class ClaimsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901112947_AddMonthAndYearAsChequeFilteration")]
+    partial class AddMonthAndYearAsChequeFilteration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

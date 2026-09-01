@@ -19,6 +19,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
 
             builder.HasIndex(c => c.ClaimId);
             builder.HasIndex(c => new { c.PharmacyId, c.Status, c.EndDate });
+            builder.HasIndex(c => new { c.PharmacyId, c.CompanyName, c.ClaimMonth, c.ClaimYear });
         }
     }
 }

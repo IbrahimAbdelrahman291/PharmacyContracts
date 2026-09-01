@@ -104,6 +104,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ClaimId = claim.Id,
                 PharmacyId = pharmacyId,
                 CompanyName = claim.CompanyName,
+                ClaimMonth = claim.Month,     
+                ClaimYear = claim.Year,
                 DepartmentName = a.DepartmentName,
                 Amount = a.Amount,
                 StartDate = request.StartDate,

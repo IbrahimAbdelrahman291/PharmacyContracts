@@ -17,18 +17,18 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public Task<bool> ExistsForClaimAsync(Guid claimId, CancellationToken cancellationToken = default)
             => _context.Cheques.AnyAsync(c => c.ClaimId == claimId, cancellationToken);
 
-        public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
+        public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear, CancellationToken cancellationToken = default)
         {
             var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
 
             if (!string.IsNullOrWhiteSpace(companyName))
                 query = query.Where(c => c.CompanyName == companyName);
 
-            if (month.HasValue)
-                query = query.Where(c => c.StartDate.Month == month.Value);
+            if (claimMonth.HasValue)
+                query = query.Where(c => c.ClaimMonth == claimMonth.Value);
 
-            if (year.HasValue)
-                query = query.Where(c => c.StartDate.Year == year.Value);
+            if (claimYear.HasValue)
+                query = query.Where(c => c.ClaimYear == claimYear.Value);
 
             return query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
         }
