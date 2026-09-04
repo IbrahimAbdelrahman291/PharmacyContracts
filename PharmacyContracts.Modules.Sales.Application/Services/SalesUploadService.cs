@@ -95,10 +95,12 @@ public class SalesUploadService : ISalesUploadService
         });
     }
 
-    public async Task<Result<BatchStatusResponseDto>> GetStatusAsync(Guid batchId, CancellationToken cancellationToken = default)
+    // Services/SalesUploadService.cs
+    public async Task<Result<BatchStatusResponseDto>> GetStatusAsync(Guid pharmacyId, Guid batchId, CancellationToken cancellationToken = default)
     {
         var batch = await _batchRepository.GetByIdAsync(batchId, cancellationToken);
-        if (batch is null)
+
+        if (batch is null || batch.PharmacyId != pharmacyId)
             return Result<BatchStatusResponseDto>.Failure("Batch not found.");
 
         return Result<BatchStatusResponseDto>.Success(new BatchStatusResponseDto

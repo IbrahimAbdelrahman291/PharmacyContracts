@@ -19,10 +19,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         }
 
         public async Task<Result<ClaimReviewResponseDto>> CreateAsync(
-            Guid claimId, Guid reviewerUserId, CreateClaimReviewRequestDto request, CancellationToken cancellationToken = default)
+            Guid pharmacyId, Guid claimId, Guid reviewerUserId, CreateClaimReviewRequestDto request, CancellationToken cancellationToken = default)
         {
             var claim = await _claimRepository.GetByIdAsync(claimId, cancellationToken);
-            if (claim is null)
+
+            // إضافة فحص الملكية
+            if (claim is null || claim.PharmacyId != pharmacyId)
                 return Result<ClaimReviewResponseDto>.Failure("المطالبة غير موجودة.");
 
             var existingReview = await _claimReviewRepository.GetByClaimIdAsync(claimId, cancellationToken);
@@ -88,8 +90,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto());
         }
 
-        public async Task<Result<ClaimReviewResponseDto>> GetByClaimIdAsync(Guid claimId, CancellationToken cancellationToken = default)
+        public async Task<Result<ClaimReviewResponseDto>> GetByClaimIdAsync(Guid pharmacyId, Guid claimId, CancellationToken cancellationToken = default)
         {
+            var claim = await _claimRepository.GetByIdAsync(claimId, cancellationToken);
+            if (claim is null || claim.PharmacyId != pharmacyId)
+                return Result<ClaimReviewResponseDto>.Failure("المطالبة غير موجودة.");
+
             var review = await _claimReviewRepository.GetByClaimIdAsync(claimId, cancellationToken);
             if (review is null)
                 return Result<ClaimReviewResponseDto>.Failure("لا توجد مراجعة لهذه المطالبة.");

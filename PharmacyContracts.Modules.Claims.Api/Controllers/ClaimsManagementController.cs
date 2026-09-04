@@ -53,8 +53,9 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
         [Authorize(Roles = "ClaimsReviewer")]
         public async Task<IActionResult> CreateReview(Guid id, [FromBody] CreateClaimReviewRequestDto request, CancellationToken cancellationToken)
         {
+            var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;   // ← إضافة
             var reviewerUserId = _currentUserService.UserId!.Value;
-            var result = await _claimReviewService.CreateAsync(id, reviewerUserId, request, cancellationToken);
+            var result = await _claimReviewService.CreateAsync(pharmacyId, id, reviewerUserId, request, cancellationToken);
 
             if (!result.Succeeded)
                 return BadRequest(new { errors = result.Errors });
@@ -79,7 +80,8 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
         [Authorize(Roles = "Pharmacy,ClaimsReviewer")]
         public async Task<IActionResult> GetReview(Guid id, CancellationToken cancellationToken)
         {
-            var result = await _claimReviewService.GetByClaimIdAsync(id, cancellationToken);
+            var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;   // ← إضافة
+            var result = await _claimReviewService.GetByClaimIdAsync(pharmacyId, id, cancellationToken);
 
             if (!result.Succeeded)
                 return NotFound(new { errors = result.Errors });

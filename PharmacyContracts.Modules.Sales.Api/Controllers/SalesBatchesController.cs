@@ -41,7 +41,9 @@ public class SalesBatchesController : ControllerBase
     [HttpGet("api/v1/sales-batches/{id:guid}")]
     public async Task<IActionResult> GetStatus(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _salesUploadService.GetStatusAsync(id, cancellationToken);
+        var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
+        var result = await _salesUploadService.GetStatusAsync(pharmacyId, id, cancellationToken);
+
         if (!result.Succeeded)
             return NotFound(new { errors = result.Errors });
 
