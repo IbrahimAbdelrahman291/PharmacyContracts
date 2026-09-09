@@ -45,10 +45,33 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] string? companyName, [FromQuery] int? month, [FromQuery] int? year, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? companyName,
+            [FromQuery] int? month,
+            [FromQuery] int? year,
+            [FromQuery] string? status,
+            CancellationToken cancellationToken)
         {
             var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
-            var result = await _chequeService.GetAsync(pharmacyId, companyName, month, year, cancellationToken);
+            var result = await _chequeService.GetAsync(pharmacyId, companyName, month, year, status, cancellationToken);
+
+            if (!result.Succeeded)
+                return BadRequest(new { errors = result.Errors });
+
+            return Ok(result.Data);
+        }
+
+        [HttpGet("upcoming-due")]
+        public async Task<IActionResult> GetUpcomingDue(
+            [FromQuery] int days = 7,
+            CancellationToken cancellationToken = default)
+        {
+            var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
+            var result = await _chequeService.GetUpcomingDueAsync(pharmacyId, days, cancellationToken);
+
+            if (!result.Succeeded)
+                return BadRequest(new { errors = result.Errors });
+
             return Ok(result.Data);
         }
 

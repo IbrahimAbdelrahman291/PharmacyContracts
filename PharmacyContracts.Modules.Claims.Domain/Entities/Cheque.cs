@@ -9,6 +9,8 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
         public Guid PharmacyId { get; set; }
         public string CompanyName { get; set; } = string.Empty;
         public string? DepartmentName { get; set; }
+        public string ChequeNumber { get; set; } = string.Empty;
+        public string BankName { get; set; } = string.Empty;
 
         public int ClaimMonth { get; set; }  
         public int ClaimYear { get; set; }

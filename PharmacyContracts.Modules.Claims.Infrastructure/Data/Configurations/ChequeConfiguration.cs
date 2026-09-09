@@ -13,11 +13,14 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
 
             builder.Property(c => c.CompanyName).IsRequired().HasMaxLength(200);
             builder.Property(c => c.DepartmentName).HasMaxLength(200);
+            builder.Property(c => c.ChequeNumber).IsRequired().HasMaxLength(50);
+            builder.Property(c => c.BankName).IsRequired().HasMaxLength(200);
             builder.Property(c => c.Amount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.RemainingAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
 
             builder.HasIndex(c => c.ClaimId);
+            builder.HasIndex(c => new { c.PharmacyId, c.ChequeNumber }).IsUnique();
             builder.HasIndex(c => new { c.PharmacyId, c.Status, c.EndDate });
             builder.HasIndex(c => new { c.PharmacyId, c.CompanyName, c.ClaimMonth, c.ClaimYear });
         }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PharmacyContracts.Modules.Claims.Application.Interfaces;
+using PharmacyContracts.Modules.Claims.Application.DTOs;
 using PharmacyContracts.Modules.Claims.Domain.Entities;
 using PharmacyContracts.Modules.Claims.Domain.Enums;
 using PharmacyContracts.Modules.Claims.Infrastructure.Data;
@@ -17,7 +18,12 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public Task<bool> ExistsForClaimAsync(Guid claimId, CancellationToken cancellationToken = default)
             => _context.Cheques.AnyAsync(c => c.ClaimId == claimId, cancellationToken);
 
-        public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear, CancellationToken cancellationToken = default)
+        public Task<bool> ExistsByChequeNumberAsync(Guid pharmacyId, string chequeNumber, CancellationToken cancellationToken = default)
+            => _context.Cheques.AnyAsync(
+                c => c.PharmacyId == pharmacyId && c.ChequeNumber == chequeNumber,
+                cancellationToken);
+
+        public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear, ChequeStatus? status, CancellationToken cancellationToken = default)
         {
             var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
 
@@ -30,7 +36,60 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             if (claimYear.HasValue)
                 query = query.Where(c => c.ClaimYear == claimYear.Value);
 
+            if (status.HasValue)
+                query = query.Where(c => c.Status == status.Value);
+
             return query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
+        }
+
+        public async Task<decimal> GetTotalCollectedAsync(Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+        {
+            var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
+
+            if (!string.IsNullOrWhiteSpace(companyName))
+                query = query.Where(c => c.CompanyName == companyName);
+
+            return await query.SumAsync(c => (decimal?)(
+                c.Status == ChequeStatus.PaidInFull
+                    ? c.Amount
+                    : c.Status == ChequeStatus.PartiallyPaid
+                        ? c.Amount - (c.RemainingAmount ?? 0m)
+                        : 0m), cancellationToken) ?? 0m;
+        }
+
+        public Task<List<UnpaidChequeBalanceDto>> GetUnpaidOrPartiallyPaidChequesAsync(
+            Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+        {
+            var query = _context.Cheques.Where(c =>
+                c.PharmacyId == pharmacyId &&
+                (c.Status == ChequeStatus.Pending ||
+                 c.Status == ChequeStatus.Deferred ||
+                 c.Status == ChequeStatus.Overdue ||
+                 c.Status == ChequeStatus.PartiallyPaid));
+
+            if (!string.IsNullOrWhiteSpace(companyName))
+                query = query.Where(c => c.CompanyName == companyName);
+
+            return query.Select(c => new UnpaidChequeBalanceDto
+            {
+                EndDate = c.EndDate,
+                Amount = c.Amount,
+                RemainingAmount = c.RemainingAmount,
+                Status = c.Status
+            }).ToListAsync(cancellationToken);
+        }
+
+        public Task<List<Cheque>> GetUpcomingDueAsync(Guid pharmacyId, int days, CancellationToken cancellationToken = default)
+        {
+            var today = DateTime.UtcNow.Date;
+            var endDate = today.AddDays(days);
+
+            return _context.Cheques
+                .Where(c => c.PharmacyId == pharmacyId &&
+                            c.Status == ChequeStatus.Pending &&
+                            c.EndDate >= today && c.EndDate <= endDate)
+                .OrderBy(c => c.EndDate)
+                .ToListAsync(cancellationToken);
         }
 
         public Task<List<Cheque>> GetOverdueCandidatesAsync(DateTime asOfDate, CancellationToken cancellationToken = default)

@@ -7,6 +7,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Interfaces
     {
         Task<bool> ExistsForPeriodAsync(Guid pharmacyId, int month, int year, CancellationToken cancellationToken = default);
         Task<List<Claim>> GetByPeriodAsync(Guid pharmacyId, int? month, int? year, CancellationToken cancellationToken = default);
+        Task<decimal> GetTotalClaimedAsync(Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default);
+        Task<List<string>> GetDistinctCompanyNamesAsync(Guid pharmacyId, CancellationToken cancellationToken = default);
         Task AddRangeAsync(List<Claim> claims, CancellationToken cancellationToken = default);
     }
 }

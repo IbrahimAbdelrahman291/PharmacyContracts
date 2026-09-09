@@ -7,6 +7,8 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public Guid Id { get; set; }
         public string CompanyName { get; set; } = string.Empty;
         public string? DepartmentName { get; set; }
+        public string ChequeNumber { get; set; } = string.Empty;
+        public string BankName { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

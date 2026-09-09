@@ -70,6 +70,22 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (request.Allocations.Count == 0)
                 return Result<List<ChequeResponseDto>>.Failure("يجب تحديد توزيع واحد على الأقل.");
 
+            if (request.Allocations.Any(a => string.IsNullOrWhiteSpace(a.ChequeNumber) || string.IsNullOrWhiteSpace(a.BankName)))
+                return Result<List<ChequeResponseDto>>.Failure("رقم الشيك واسم البنك مطلوبان لكل شيك.");
+
+            var chequeNumbers = request.Allocations
+                .Select(a => a.ChequeNumber.Trim())
+                .ToList();
+
+            if (chequeNumbers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != chequeNumbers.Count)
+                return Result<List<ChequeResponseDto>>.Failure("لا يمكن تكرار رقم الشيك في نفس الطلب.");
+
+            foreach (var chequeNumber in chequeNumbers)
+            {
+                if (await _chequeRepository.ExistsByChequeNumberAsync(pharmacyId, chequeNumber, cancellationToken))
+                    return Result<List<ChequeResponseDto>>.Failure("رقم الشيك مستخدم من قبل.");
+            }
+
             // تحقق جديد: لو الشركة من غير إدارات، لازم يكون allocation واحد بس بـ DepartmentName = null
             var registeredDepartments = await _companiesQueryService.GetDepartmentNamesAsync(pharmacyId, claim.CompanyName, cancellationToken);
 
@@ -107,6 +123,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ClaimMonth = claim.Month,     
                 ClaimYear = claim.Year,
                 DepartmentName = a.DepartmentName,
+                ChequeNumber = a.ChequeNumber.Trim(),
+                BankName = a.BankName.Trim(),
                 Amount = a.Amount,
                 StartDate = request.StartDate,
                 EndDate = endDate,
@@ -121,9 +139,29 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         }
 
         public async Task<Result<List<ChequeResponseDto>>> GetAsync(
-            Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
+            Guid pharmacyId, string? companyName, int? month, int? year, string? status, CancellationToken cancellationToken = default)
         {
-            var cheques = await _chequeRepository.GetByPharmacyAsync(pharmacyId, companyName, month, year, cancellationToken);
+            ChequeStatus? parsedStatus = null;
+            if (status is not null)
+            {
+                if (!Enum.TryParse<ChequeStatus>(status, ignoreCase: true, out var value) ||
+                    !Enum.IsDefined(value))
+                    return Result<List<ChequeResponseDto>>.Failure("حالة غير صحيحة.");
+
+                parsedStatus = value;
+            }
+
+            var cheques = await _chequeRepository.GetByPharmacyAsync(pharmacyId, companyName, month, year, parsedStatus, cancellationToken);
+            return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
+        }
+
+        public async Task<Result<List<ChequeResponseDto>>> GetUpcomingDueAsync(
+            Guid pharmacyId, int days, CancellationToken cancellationToken = default)
+        {
+            if (days < 0)
+                return Result<List<ChequeResponseDto>>.Failure("عدد الأيام يجب ألا يكون سالبًا.");
+
+            var cheques = await _chequeRepository.GetUpcomingDueAsync(pharmacyId, days, cancellationToken);
             return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
         }
 

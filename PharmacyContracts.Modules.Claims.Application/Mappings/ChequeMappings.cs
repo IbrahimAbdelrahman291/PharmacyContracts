@@ -12,6 +12,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 Id = cheque.Id,
                 CompanyName = cheque.CompanyName,
                 DepartmentName = cheque.DepartmentName,
+                ChequeNumber = cheque.ChequeNumber,
+                BankName = cheque.BankName,
                 Amount = cheque.Amount,
                 StartDate = cheque.StartDate,
                 EndDate = cheque.EndDate,

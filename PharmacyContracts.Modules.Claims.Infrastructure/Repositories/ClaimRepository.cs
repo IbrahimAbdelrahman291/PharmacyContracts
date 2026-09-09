@@ -29,6 +29,25 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             return query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
         }
 
+        public async Task<decimal> GetTotalClaimedAsync(Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+        {
+            var query = _context.Claims.Where(c => c.PharmacyId == pharmacyId);
+
+            if (!string.IsNullOrWhiteSpace(companyName))
+                query = query.Where(c => c.CompanyName == companyName);
+
+            return await query.SumAsync(
+                c => (decimal?)(c.CorrectedAmount ?? c.ClaimAmountAfterDiscount),
+                cancellationToken) ?? 0m;
+        }
+
+        public Task<List<string>> GetDistinctCompanyNamesAsync(Guid pharmacyId, CancellationToken cancellationToken = default)
+            => _context.Claims
+                .Where(c => c.PharmacyId == pharmacyId)
+                .Select(c => c.CompanyName)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
         public async Task AddAsync(Claim entity, CancellationToken cancellationToken = default)
             => await _context.Claims.AddAsync(entity, cancellationToken);
 
