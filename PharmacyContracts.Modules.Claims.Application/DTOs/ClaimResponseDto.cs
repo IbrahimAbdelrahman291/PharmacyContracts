@@ -10,6 +10,7 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public int Year { get; set; }
         public decimal ClaimAmountAfterDiscount { get; set; }
         public decimal? CorrectedAmount { get; set; }
+        public string? Notes { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }

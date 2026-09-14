@@ -15,6 +15,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 Year = claim.Year,
                 ClaimAmountAfterDiscount = claim.ClaimAmountAfterDiscount,
                 CorrectedAmount = claim.CorrectedAmount,
+                Notes = claim.notes,
                 Status = claim.Status.ToString(),
                 CreatedAt = claim.CreatedAt
             };
