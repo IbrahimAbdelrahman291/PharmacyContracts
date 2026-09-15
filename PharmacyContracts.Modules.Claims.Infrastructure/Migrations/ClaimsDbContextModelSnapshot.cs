@@ -32,12 +32,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("BankName")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ChequeNumber")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -93,7 +91,8 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.HasIndex("ClaimId");
 
                     b.HasIndex("PharmacyId", "ChequeNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[ChequeNumber] IS NOT NULL");
 
                     b.HasIndex("PharmacyId", "Status", "EndDate");
 

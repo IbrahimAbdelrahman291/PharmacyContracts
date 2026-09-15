@@ -4,6 +4,7 @@ using PharmacyContracts.Modules.Claims.Application.DTOs;
 using PharmacyContracts.Modules.Claims.Domain.Entities;
 using PharmacyContracts.Modules.Claims.Domain.Enums;
 using PharmacyContracts.Modules.Claims.Infrastructure.Data;
+using System.Data;
 
 namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
 {
@@ -18,9 +19,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public Task<bool> ExistsForClaimAsync(Guid claimId, CancellationToken cancellationToken = default)
             => _context.Cheques.AnyAsync(c => c.ClaimId == claimId, cancellationToken);
 
-        public Task<bool> ExistsByChequeNumberAsync(Guid pharmacyId, string chequeNumber, CancellationToken cancellationToken = default)
+        public Task<bool> ExistsByChequeNumberAsync(Guid pharmacyId, string chequeNumber, Guid? excludedChequeId = null, CancellationToken cancellationToken = default)
             => _context.Cheques.AnyAsync(
-                c => c.PharmacyId == pharmacyId && c.ChequeNumber == chequeNumber,
+                c => c.PharmacyId == pharmacyId && c.ChequeNumber == chequeNumber &&
+                     (!excludedChequeId.HasValue || c.Id != excludedChequeId.Value),
                 cancellationToken);
 
         public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear, ChequeStatus? status, CancellationToken cancellationToken = default)
@@ -104,6 +106,24 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
 
         public async Task AddRangeAsync(List<Cheque> cheques, CancellationToken cancellationToken = default)
             => await _context.Cheques.AddRangeAsync(cheques, cancellationToken);
+
+        public async Task<bool> TryAddRangeForClaimAsync(
+            Guid claimId, List<Cheque> cheques, CancellationToken cancellationToken = default)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable, cancellationToken);
+
+            if (await _context.Cheques.AnyAsync(c => c.ClaimId == claimId, cancellationToken))
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return false;
+            }
+
+            await _context.Cheques.AddRangeAsync(cheques, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        }
 
         public void Update(Cheque entity)
         {

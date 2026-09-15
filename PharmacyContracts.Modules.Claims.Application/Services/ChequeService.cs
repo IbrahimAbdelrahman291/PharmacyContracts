@@ -67,19 +67,28 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (alreadyHasCheques)
                 return Result<List<ChequeResponseDto>>.Failure("تم إنشاء شيكات لهذه المطالبة بالفعل.");
 
-            if (request.Allocations.Count == 0)
+            if (request.Allocations is null || request.Allocations.Count == 0)
                 return Result<List<ChequeResponseDto>>.Failure("يجب تحديد توزيع واحد على الأقل.");
 
+            if (request.Allocations.Any(a => a.Amount <= 0))
+                return Result<List<ChequeResponseDto>>.Failure("يجب أن تكون قيمة كل شيك أكبر من صفر.");
+
             var chequeNumbers = request.Allocations
-                .Select(a => a.ChequeNumber??"".Trim())
+                .Select(a => a.ChequeNumber?.Trim())
+                .Where(number => !string.IsNullOrEmpty(number))
+                .Select(number => number!)
                 .ToList();
 
-            //if (chequeNumbers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != chequeNumbers.Count)
-            //    return Result<List<ChequeResponseDto>>.Failure("لا يمكن تكرار رقم الشيك في نفس الطلب.");
+            if (chequeNumbers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != chequeNumbers.Count)
+                return Result<List<ChequeResponseDto>>.Failure("لا يمكن تكرار رقم الشيك في نفس الطلب.");
+
+            if (chequeNumbers.Any(number => number.Length > 50) ||
+                request.Allocations.Any(a => a.BankName?.Trim().Length > 200))
+                return Result<List<ChequeResponseDto>>.Failure("رقم الشيك أو اسم البنك أطول من الحد المسموح.");
 
             foreach (var chequeNumber in chequeNumbers)
             {
-                if (await _chequeRepository.ExistsByChequeNumberAsync(pharmacyId, chequeNumber, cancellationToken))
+                if (await _chequeRepository.ExistsByChequeNumberAsync(pharmacyId, chequeNumber, cancellationToken: cancellationToken))
                     return Result<List<ChequeResponseDto>>.Failure("رقم الشيك مستخدم من قبل.");
             }
 
@@ -120,8 +129,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ClaimMonth = claim.Month,     
                 ClaimYear = claim.Year,
                 DepartmentName = a.DepartmentName,
-                ChequeNumber = a.ChequeNumber.Trim() ?? string.Empty,
-                BankName = a.BankName.Trim() ?? string.Empty,
+                ChequeNumber = string.IsNullOrWhiteSpace(a.ChequeNumber) ? null : a.ChequeNumber.Trim(),
+                BankName = string.IsNullOrWhiteSpace(a.BankName) ? null : a.BankName.Trim(),
                 Amount = a.Amount,
                 StartDate = request.StartDate,
                 EndDate = endDate,
@@ -129,8 +138,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 Status = ChequeStatus.Pending
             }).ToList();
 
-            await _chequeRepository.AddRangeAsync(cheques, cancellationToken);
-            await _chequeRepository.SaveChangesAsync(cancellationToken);
+            var created = await _chequeRepository.TryAddRangeForClaimAsync(claim.Id, cheques, cancellationToken);
+            if (!created)
+                return Result<List<ChequeResponseDto>>.Failure("تم إنشاء شيكات لهذه المطالبة بالفعل.");
 
             return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
         }
@@ -171,11 +181,34 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (!Enum.TryParse<ChequeStatus>(request.Status, ignoreCase: true, out var status) || status == ChequeStatus.Overdue)
                 return Result.Failure("حالة غير صحيحة. القيم المسموحة: Pending, PaidInFull, PartiallyPaid, Deferred.");
 
+            var chequeNumber = request.ChequeNumber?.Trim();
+            var bankName = request.BankName?.Trim();
+            var updatesChequeDetails = request.ChequeNumber is not null || request.BankName is not null;
+
+            if (updatesChequeDetails)
+            {
+                if (string.IsNullOrEmpty(chequeNumber) || string.IsNullOrEmpty(bankName))
+                    return Result.Failure("يجب إدخال رقم الشيك واسم البنك معًا.");
+
+                if (chequeNumber.Length > 50 || bankName.Length > 200)
+                    return Result.Failure("رقم الشيك أو اسم البنك أطول من الحد المسموح.");
+
+                if (await _chequeRepository.ExistsByChequeNumberAsync(
+                        pharmacyId, chequeNumber, chequeId, cancellationToken))
+                    return Result.Failure("رقم الشيك مستخدم من قبل.");
+            }
+
             if (status == ChequeStatus.PartiallyPaid && !request.RemainingAmount.HasValue)
                 return Result.Failure("يجب إدخال المبلغ المتبقي عند اختيار السداد الجزئي.");
 
             cheque.Status = status;
             cheque.RemainingAmount = status == ChequeStatus.PartiallyPaid ? request.RemainingAmount : null;
+
+            if (updatesChequeDetails)
+            {
+                cheque.ChequeNumber = chequeNumber;
+                cheque.BankName = bankName;
+            }
 
             _chequeRepository.Update(cheque);
             await _chequeRepository.SaveChangesAsync(cancellationToken);
