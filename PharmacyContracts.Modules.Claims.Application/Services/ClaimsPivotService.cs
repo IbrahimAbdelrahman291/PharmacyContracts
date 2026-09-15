@@ -60,6 +60,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     var total = companyGroup.Sum(t => t.TotalRemainingAmount);
                     var discountPercentage = discountByCompany[companyGroup.Key];
                     var totalAfterDiscount = total - (total * discountPercentage / 100);
+                    
 
                     return new CompanyPivotRowDto
                     {

@@ -13,6 +13,7 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
 
         public decimal ClaimAmountAfterDiscount { get; set; }
         public decimal? CorrectedAmount { get; set; }
+        public string? DiscrepancyType { get; set; }
         public string? notes { get; set; }
 
         public ClaimStatus Status { get; set; } = ClaimStatus.Pending;

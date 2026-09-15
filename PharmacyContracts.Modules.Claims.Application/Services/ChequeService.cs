@@ -70,15 +70,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (request.Allocations.Count == 0)
                 return Result<List<ChequeResponseDto>>.Failure("يجب تحديد توزيع واحد على الأقل.");
 
-            if (request.Allocations.Any(a => string.IsNullOrWhiteSpace(a.ChequeNumber) || string.IsNullOrWhiteSpace(a.BankName)))
-                return Result<List<ChequeResponseDto>>.Failure("رقم الشيك واسم البنك مطلوبان لكل شيك.");
-
             var chequeNumbers = request.Allocations
-                .Select(a => a.ChequeNumber.Trim())
+                .Select(a => a.ChequeNumber??"".Trim())
                 .ToList();
 
-            if (chequeNumbers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != chequeNumbers.Count)
-                return Result<List<ChequeResponseDto>>.Failure("لا يمكن تكرار رقم الشيك في نفس الطلب.");
+            //if (chequeNumbers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != chequeNumbers.Count)
+            //    return Result<List<ChequeResponseDto>>.Failure("لا يمكن تكرار رقم الشيك في نفس الطلب.");
 
             foreach (var chequeNumber in chequeNumbers)
             {
@@ -123,8 +120,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ClaimMonth = claim.Month,     
                 ClaimYear = claim.Year,
                 DepartmentName = a.DepartmentName,
-                ChequeNumber = a.ChequeNumber.Trim(),
-                BankName = a.BankName.Trim(),
+                ChequeNumber = a.ChequeNumber.Trim() ?? string.Empty,
+                BankName = a.BankName.Trim() ?? string.Empty,
                 Amount = a.Amount,
                 StartDate = request.StartDate,
                 EndDate = endDate,

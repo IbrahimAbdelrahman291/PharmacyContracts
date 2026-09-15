@@ -51,6 +51,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             claim.CorrectedAmount = request.IsAccurate ? claim.ClaimAmountAfterDiscount : request.CorrectedAmount!.Value;
             claim.Status = ClaimStatus.Reviewed;
             claim.notes = request.Notes;
+            claim.DiscrepancyType = discrepancyType.ToString();
             _claimRepository.Update(claim);
 
             await _claimReviewRepository.SaveChangesAsync(cancellationToken);
