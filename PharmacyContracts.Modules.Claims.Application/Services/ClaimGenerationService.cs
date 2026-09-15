@@ -43,23 +43,31 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 .ToList();
 
             var companyNames = companyTotals.Select(c => c.CompanyName).ToList();
-            var discountByCompany = await _companiesQueryService.GetDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
+            var totalDiscountByCompany = await _companiesQueryService.GetDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
+            var discountByCompany = await _companiesQueryService.GetItemDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
+            var claims = new List<Claim>();
 
-            var claims = companyTotals.Select(c =>
+            foreach (var companyTotal in companyTotals)
             {
-                var discountPercentage = discountByCompany[c.CompanyName];
-                var afterDiscount = c.Total - (c.Total * discountPercentage / 100);
+                var discounts = discountByCompany[companyTotal.CompanyName];
+                var insights = await _salesQueryService.GetCompanyInsightsAsync(
+                    pharmacyId, companyTotal.CompanyName, month, year, cancellationToken);
+                var totalDiscount = totalDiscountByCompany[companyTotal.CompanyName];
+                var afterDiscount = totalDiscount > 0
+                    ? insights.TotalRemainingAmount * (1 - totalDiscount / 100)
+                    : insights.TotalLocalItemsAmount * (1 - discounts.LocalDiscountPercentage / 100)
+                        + insights.TotalImportedItemsAmount * (1 - discounts.ImportedDiscountPercentage / 100);
 
-                return new Claim
+                claims.Add(new Claim
                 {
                     PharmacyId = pharmacyId,
-                    CompanyName = c.CompanyName,
+                    CompanyName = companyTotal.CompanyName,
                     Month = month,
                     Year = year,
                     ClaimAmountAfterDiscount = afterDiscount,
                     Status = ClaimStatus.Pending
-                };
-            }).ToList();
+                });
+            }
 
             await _claimRepository.AddRangeAsync(claims, cancellationToken);
             await _claimRepository.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,7 @@
 ﻿// Companies.Infrastructure/Queries/CompaniesQueryService.cs
 using Microsoft.EntityFrameworkCore;
 using PharmacyContracts.Modules.Companies.Infrastructure.Data;
+using PharmacyContracts.SharedKernel.Contracts;
 using PharmacyContracts.SharedKernel.Interfaces;
 
 namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
@@ -45,6 +46,40 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
             foreach (var name in namesList)
             {
                 result.TryAdd(name, 0);
+            }
+
+            return result;
+        }
+
+        public async Task<Dictionary<string, CompanyDiscountPercentagesContract>> GetItemDiscountPercentagesAsync(
+            Guid pharmacyId, IEnumerable<string> companyNames, CancellationToken cancellationToken = default)
+        {
+            var namesList = companyNames.Distinct().ToList();
+
+            if (namesList.Count == 0)
+                return new Dictionary<string, CompanyDiscountPercentagesContract>();
+
+            var companies = await _context.Companies
+                .Where(c => c.PharmacyId == pharmacyId && namesList.Contains(c.Name))
+                .Select(c => new
+                {
+                    c.Name,
+                    c.LocalDiscountPercentage,
+                    c.ImportedDiscountPercentage
+                })
+                .ToListAsync(cancellationToken);
+
+            var result = companies.ToDictionary(
+                c => c.Name,
+                c => new CompanyDiscountPercentagesContract
+                {
+                    LocalDiscountPercentage = c.LocalDiscountPercentage,
+                    ImportedDiscountPercentage = c.ImportedDiscountPercentage
+                });
+
+            foreach (var name in namesList)
+            {
+                result.TryAdd(name, new CompanyDiscountPercentagesContract());
             }
 
             return result;

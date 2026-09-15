@@ -30,8 +30,14 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             var insights = await _salesQueryService.GetCompanyInsightsAsync(pharmacyId, companyName, month, year, cancellationToken);
             var discountPercentage = await _companiesQueryService.GetDiscountPercentageAsync(pharmacyId, companyName, cancellationToken);
+            var itemDiscountsByCompany = await _companiesQueryService.GetItemDiscountPercentagesAsync(
+                pharmacyId, new[] { companyName }, cancellationToken);
+            var itemDiscounts = itemDiscountsByCompany[companyName];
 
-            var amountAfterDiscount = insights.TotalRemainingAmount - (insights.TotalRemainingAmount * discountPercentage / 100);
+            var amountAfterDiscount = discountPercentage > 0
+                ? insights.TotalRemainingAmount * (1 - discountPercentage / 100)
+                : insights.TotalLocalItemsAmount * (1 - itemDiscounts.LocalDiscountPercentage / 100)
+                    + insights.TotalImportedItemsAmount * (1 - itemDiscounts.ImportedDiscountPercentage / 100);
 
             return Result<CompanyInsightsResponseDto>.Success(new CompanyInsightsResponseDto
             {

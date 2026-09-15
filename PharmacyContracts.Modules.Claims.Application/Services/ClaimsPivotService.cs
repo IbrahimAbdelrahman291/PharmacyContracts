@@ -1,5 +1,6 @@
 ﻿using PharmacyContracts.Modules.Claims.Application.DTOs;
 using PharmacyContracts.Modules.Claims.Application.Interfaces;
+using PharmacyContracts.SharedKernel.Contracts;
 using PharmacyContracts.SharedKernel.Interfaces;
 using PharmacyContracts.SharedKernel.Wrappers;
 
@@ -44,8 +45,15 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             var companyNames = totals.Select(t => t.CompanyName).Distinct().ToList();
 
-            // استعلام واحد بس لكل الشركات، بدل loop بينادي الداتابيز مرة لكل شركة
-            var discountByCompany = await _companiesQueryService.GetDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
+            var totalDiscountByCompany = await _companiesQueryService.GetDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
+            var discountByCompany = await _companiesQueryService.GetItemDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
+            var insightsByCompany = new Dictionary<string, CompanyInsightsContract>();
+
+            foreach (var companyName in companyNames)
+            {
+                insightsByCompany[companyName] = await _salesQueryService.GetCompanyInsightsAsync(
+                    pharmacyId, companyName, month, year, cancellationToken);
+            }
 
             var rows = totals
                 .GroupBy(t => t.CompanyName)
@@ -58,9 +66,13 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                             .Sum(t => t.TotalRemainingAmount));
 
                     var total = companyGroup.Sum(t => t.TotalRemainingAmount);
-                    var discountPercentage = discountByCompany[companyGroup.Key];
-                    var totalAfterDiscount = total - (total * discountPercentage / 100);
-                    
+                    var discounts = discountByCompany[companyGroup.Key];
+                    var insights = insightsByCompany[companyGroup.Key];
+                    var totalDiscount = totalDiscountByCompany[companyGroup.Key];
+                    var totalAfterDiscount = totalDiscount > 0
+                        ? insights.TotalRemainingAmount * (1 - totalDiscount / 100)
+                        : insights.TotalLocalItemsAmount * (1 - discounts.LocalDiscountPercentage / 100)
+                            + insights.TotalImportedItemsAmount * (1 - discounts.ImportedDiscountPercentage / 100);
 
                     return new CompanyPivotRowDto
                     {
