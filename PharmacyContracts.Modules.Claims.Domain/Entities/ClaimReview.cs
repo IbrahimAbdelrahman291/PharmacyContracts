@@ -10,6 +10,7 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
 
         public bool IsAccurate { get; set; }
         public decimal? CorrectedAmount { get; set; }
+        public int? CorrectedPrescriptionsCount { get; set; }
         public DiscrepancyType DiscrepancyType { get; set; } = DiscrepancyType.None;
         public string? Notes { get; set; }
 

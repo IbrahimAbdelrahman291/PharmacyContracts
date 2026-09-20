@@ -55,8 +55,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 var totalDiscount = totalDiscountByCompany[companyTotal.CompanyName];
                 var afterDiscount = totalDiscount > 0
                     ? insights.TotalRemainingAmount * (1 - totalDiscount / 100)
-                    : insights.TotalLocalItemsAmount * (1 - discounts.LocalDiscountPercentage / 100)
-                        + insights.TotalImportedItemsAmount * (1 - discounts.ImportedDiscountPercentage / 100);
+                    : (insights.TotalLocalItemsAmount * (1 - discounts.LocalDiscountPercentage / 100))
+                        + (insights.TotalImportedItemsAmount * (1 - discounts.ImportedDiscountPercentage / 100));
 
                 claims.Add(new Claim
                 {
@@ -64,7 +64,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     CompanyName = companyTotal.CompanyName,
                     Month = month,
                     Year = year,
+                    ClaimAmount = insights.TotalRemainingAmount,
                     ClaimAmountAfterDiscount = afterDiscount,
+                    PrescriptionsCount = insights.PrescriptionsCount,
                     Status = ClaimStatus.Pending
                 });
             }

@@ -9,6 +9,7 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public Guid ReviewedByUserId { get; set; }
         public bool IsAccurate { get; set; }
         public decimal? CorrectedAmount { get; set; }
+        public int? CorrectedPrescriptionsCount { get; set; }
         public string DiscrepancyType { get; set; } = string.Empty;
         public string? Notes { get; set; }
         public bool WasEditedByPharmacy { get; set; }

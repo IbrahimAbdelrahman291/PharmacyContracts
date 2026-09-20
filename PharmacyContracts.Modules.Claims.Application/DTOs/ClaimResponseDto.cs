@@ -8,8 +8,11 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public string CompanyName { get; set; } = string.Empty;
         public int Month { get; set; }
         public int Year { get; set; }
+        public decimal ClaimAmount { get; set; }
         public decimal ClaimAmountAfterDiscount { get; set; }
+        public int PrescriptionsCount { get; set; }
         public decimal? CorrectedAmount { get; set; }
+        public int? CorrectedPrescriptionsCount { get; set; }
         public string? DiscrepancyType { get; set; }
         public string? Notes { get; set; }
         public string Status { get; set; } = string.Empty;

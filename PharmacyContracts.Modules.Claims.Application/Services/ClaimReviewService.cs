@@ -31,7 +31,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (existingReview is not null)
                 return Result<ClaimReviewResponseDto>.Failure("تم إضافة مراجعة لهذه المطالبة من قبل.");
 
-            var validation = ValidateReviewInput(request.IsAccurate, request.CorrectedAmount, request.DiscrepancyType, out var discrepancyType);
+            var validation = ValidateReviewInput(request.IsAccurate, request.CorrectedAmount,
+                request.CorrectedPrescriptionsCount, request.DiscrepancyType, out var discrepancyType);
             if (!validation.Succeeded)
                 return Result<ClaimReviewResponseDto>.Failure(validation.Errors);
 
@@ -41,6 +42,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ReviewedByUserId = reviewerUserId,
                 IsAccurate = request.IsAccurate,
                 CorrectedAmount = request.IsAccurate ? null : request.CorrectedAmount,
+                CorrectedPrescriptionsCount = request.IsAccurate ? null : request.CorrectedPrescriptionsCount,
                 DiscrepancyType = request.IsAccurate ? DiscrepancyType.None : discrepancyType,
                 Notes = request.Notes,
                 WasEditedByPharmacy = false
@@ -49,6 +51,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             await _claimReviewRepository.AddAsync(review, cancellationToken);
 
             claim.CorrectedAmount = request.IsAccurate ? claim.ClaimAmountAfterDiscount : request.CorrectedAmount!.Value;
+            claim.CorrectedPrescriptionsCount = request.IsAccurate
+                ? claim.PrescriptionsCount
+                : request.CorrectedPrescriptionsCount!.Value;
             claim.Status = ClaimStatus.Reviewed;
             claim.notes = request.Notes;
             claim.DiscrepancyType = discrepancyType.ToString();
@@ -70,12 +75,14 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (review is null)
                 return Result<ClaimReviewResponseDto>.Failure("لا توجد مراجعة لهذه المطالبة بعد.");
 
-            var validation = ValidateReviewInput(request.IsAccurate, request.CorrectedAmount, request.DiscrepancyType, out var discrepancyType);
+            var validation = ValidateReviewInput(request.IsAccurate, request.CorrectedAmount,
+                request.CorrectedPrescriptionsCount, request.DiscrepancyType, out var discrepancyType);
             if (!validation.Succeeded)
                 return Result<ClaimReviewResponseDto>.Failure(validation.Errors);
 
             review.IsAccurate = request.IsAccurate;
             review.CorrectedAmount = request.IsAccurate ? null : request.CorrectedAmount;
+            review.CorrectedPrescriptionsCount = request.IsAccurate ? null : request.CorrectedPrescriptionsCount;
             review.DiscrepancyType = request.IsAccurate ? DiscrepancyType.None : discrepancyType;
             review.Notes = request.Notes;
             review.WasEditedByPharmacy = true;
@@ -84,6 +91,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             _claimReviewRepository.Update(review);
 
             claim.CorrectedAmount = request.IsAccurate ? claim.ClaimAmountAfterDiscount : request.CorrectedAmount!.Value;
+            claim.CorrectedPrescriptionsCount = request.IsAccurate
+                ? claim.PrescriptionsCount
+                : request.CorrectedPrescriptionsCount!.Value;
             claim.Status = ClaimStatus.EditedAfterReview;
             claim.notes = request.Notes;
             _claimRepository.Update(claim);
@@ -106,7 +116,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto());
         }
 
-        private static Result ValidateReviewInput(bool isAccurate, decimal? correctedAmount, string? discrepancyTypeRaw, out DiscrepancyType discrepancyType)
+        private static Result ValidateReviewInput(bool isAccurate, decimal? correctedAmount,
+            int? correctedPrescriptionsCount, string? discrepancyTypeRaw, out DiscrepancyType discrepancyType)
         {
             discrepancyType = DiscrepancyType.None;
 
@@ -115,6 +126,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             if (!correctedAmount.HasValue)
                 return Result.Failure("يجب إدخال المبلغ الصحيح عند الإشارة إلى وجود خطأ في المطالبة.");
+
+            if (!correctedPrescriptionsCount.HasValue)
+                return Result.Failure("يجب إدخال العدد الصحيح للوصفات عند الإشارة إلى وجود خطأ في المطالبة.");
+
+            if (correctedPrescriptionsCount.Value < 0)
+                return Result.Failure("لا يمكن أن يكون العدد الصحيح للوصفات أقل من صفر.");
 
             if (string.IsNullOrWhiteSpace(discrepancyTypeRaw) || !Enum.TryParse(discrepancyTypeRaw, ignoreCase: true, out discrepancyType) || discrepancyType == DiscrepancyType.None)
                 return Result.Failure("يجب تحديد سبب التباين.");

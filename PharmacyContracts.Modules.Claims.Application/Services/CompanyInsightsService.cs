@@ -36,8 +36,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             var amountAfterDiscount = discountPercentage > 0
                 ? insights.TotalRemainingAmount * (1 - discountPercentage / 100)
-                : insights.TotalLocalItemsAmount * (1 - itemDiscounts.LocalDiscountPercentage / 100)
-                    + insights.TotalImportedItemsAmount * (1 - itemDiscounts.ImportedDiscountPercentage / 100);
+                : (insights.TotalLocalItemsAmount * (1 - itemDiscounts.LocalDiscountPercentage / 100))
+                    + (insights.TotalImportedItemsAmount * (1 - itemDiscounts.ImportedDiscountPercentage / 100));
 
             return Result<CompanyInsightsResponseDto>.Success(new CompanyInsightsResponseDto
             {

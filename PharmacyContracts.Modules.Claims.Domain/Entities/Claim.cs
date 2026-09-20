@@ -11,8 +11,11 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
         public int Month { get; set; }
         public int Year { get; set; }
 
+        public decimal ClaimAmount { get; set; }
         public decimal ClaimAmountAfterDiscount { get; set; }
+        public int PrescriptionsCount { get; set; }
         public decimal? CorrectedAmount { get; set; }
+        public int? CorrectedPrescriptionsCount { get; set; }
         public string? DiscrepancyType { get; set; }
         public string? notes { get; set; }
 

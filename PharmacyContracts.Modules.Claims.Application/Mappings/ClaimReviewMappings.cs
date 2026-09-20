@@ -14,6 +14,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 ReviewedByUserId = review.ReviewedByUserId,
                 IsAccurate = review.IsAccurate,
                 CorrectedAmount = review.CorrectedAmount,
+                CorrectedPrescriptionsCount = review.CorrectedPrescriptionsCount,
                 DiscrepancyType = review.DiscrepancyType.ToString(),
                 Notes = review.Notes,
                 WasEditedByPharmacy = review.WasEditedByPharmacy,

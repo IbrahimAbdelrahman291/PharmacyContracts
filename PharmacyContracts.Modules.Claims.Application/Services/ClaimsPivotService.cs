@@ -71,8 +71,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     var totalDiscount = totalDiscountByCompany[companyGroup.Key];
                     var totalAfterDiscount = totalDiscount > 0
                         ? insights.TotalRemainingAmount * (1 - totalDiscount / 100)
-                        : insights.TotalLocalItemsAmount * (1 - discounts.LocalDiscountPercentage / 100)
-                            + insights.TotalImportedItemsAmount * (1 - discounts.ImportedDiscountPercentage / 100);
+                        : (insights.TotalLocalItemsAmount * (1 - discounts.LocalDiscountPercentage / 100))
+                            + (insights.TotalImportedItemsAmount * (1 - discounts.ImportedDiscountPercentage / 100));
 
                     return new CompanyPivotRowDto
                     {
