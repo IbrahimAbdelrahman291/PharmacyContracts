@@ -42,12 +42,29 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             var settlementDays = await _companiesQueryService.GetChequeSettlementPeriodInDaysAsync(pharmacyId, companyName, cancellationToken);
             var departments = await _companiesQueryService.GetDepartmentNamesAsync(pharmacyId, companyName, cancellationToken);
+            var financialPercentages = await _companiesQueryService.GetFinancialPercentagesAsync(
+                pharmacyId, companyName, cancellationToken);
+
+            if (financialPercentages is null)
+                return Result<ChequeCreationPreparationDto>.Failure("الشركة غير موجودة أو لا تحتوي على إعدادات مالية.");
+
+            var amountBeforeDiscount = RoundMoney(claim.ClaimAmount);
+            var amountAfterDiscount = RoundMoney(claim.ClaimAmountAfterDiscount);
 
             return Result<ChequeCreationPreparationDto>.Success(new ChequeCreationPreparationDto
             {
                 ClaimId = claim.Id,
                 CompanyName = claim.CompanyName,
                 Amount = claim.CorrectedAmount.Value,
+                AmountBeforeDiscount = amountBeforeDiscount,
+                AmountAfterDiscount = amountAfterDiscount,
+                DiscountDifference = RoundMoney(amountBeforeDiscount - amountAfterDiscount),
+                TaxPercentage = financialPercentages.TaxPercentage,
+                AdministrativeExpensesPercentage = financialPercentages.AdministrativeExpensesPercentage,
+                FinalAmount = CalculateFinalAmount(
+                    amountAfterDiscount,
+                    financialPercentages.TaxPercentage,
+                    financialPercentages.AdministrativeExpensesPercentage),
                 SettlementDays = settlementDays,
                 Departments = departments
             });
@@ -119,24 +136,69 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     $"إجمالي التوزيع ({allocationsSum}) لا يساوي قيمة المطالبة ({claim.CorrectedAmount.Value}).");
 
             var settlementDays = await _companiesQueryService.GetChequeSettlementPeriodInDaysAsync(pharmacyId, claim.CompanyName, cancellationToken);
-            var endDate = request.StartDate.AddDays(settlementDays);
+            var financialPercentages = await _companiesQueryService.GetFinancialPercentagesAsync(
+                pharmacyId, claim.CompanyName, cancellationToken);
 
-            var cheques = request.Allocations.Select(a => new Cheque
+            if (financialPercentages is null)
+                return Result<List<ChequeResponseDto>>.Failure("الشركة غير موجودة أو لا تحتوي على إعدادات مالية.");
+
+            var endDate = request.StartDate.AddDays(settlementDays);
+            var cheques = new List<Cheque>(request.Allocations.Count);
+            decimal allocatedBeforeDiscount = 0;
+            decimal allocatedAfterDiscount = 0;
+
+            for (var index = 0; index < request.Allocations.Count; index++)
             {
-                ClaimId = claim.Id,
-                PharmacyId = pharmacyId,
-                CompanyName = claim.CompanyName,
-                ClaimMonth = claim.Month,     
-                ClaimYear = claim.Year,
-                DepartmentName = a.DepartmentName,
-                ChequeNumber = string.IsNullOrWhiteSpace(a.ChequeNumber) ? null : a.ChequeNumber.Trim(),
-                BankName = string.IsNullOrWhiteSpace(a.BankName) ? null : a.BankName.Trim(),
-                Amount = a.Amount,
-                StartDate = request.StartDate,
-                EndDate = endDate,
-                SettlementDays = settlementDays,
-                Status = ChequeStatus.Pending
-            }).ToList();
+                var allocation = request.Allocations[index];
+                var isLast = index == request.Allocations.Count - 1;
+                var ratio = allocation.Amount / allocationsSum;
+                var amountBeforeDiscount = isLast
+                    ? RoundMoney(claim.ClaimAmount - allocatedBeforeDiscount)
+                    : RoundMoney(claim.ClaimAmount * ratio);
+                var amountAfterDiscount = isLast
+                    ? RoundMoney(claim.ClaimAmountAfterDiscount - allocatedAfterDiscount)
+                    : RoundMoney(claim.ClaimAmountAfterDiscount * ratio);
+
+                allocatedBeforeDiscount += amountBeforeDiscount;
+                allocatedAfterDiscount += amountAfterDiscount;
+
+                var finalAmount = CalculateFinalAmount(
+                    amountAfterDiscount,
+                    financialPercentages.TaxPercentage,
+                    financialPercentages.AdministrativeExpensesPercentage);
+                var paidAmount = RoundMoney(allocation.Amount);
+                var signedDifference = paidAmount - finalAmount;
+
+                cheques.Add(new Cheque
+                {
+                    ClaimId = claim.Id,
+                    PharmacyId = pharmacyId,
+                    CompanyName = claim.CompanyName,
+                    ClaimMonth = claim.Month,
+                    ClaimYear = claim.Year,
+                    DepartmentName = allocation.DepartmentName,
+                    ChequeNumber = string.IsNullOrWhiteSpace(allocation.ChequeNumber) ? null : allocation.ChequeNumber.Trim(),
+                    BankName = string.IsNullOrWhiteSpace(allocation.BankName) ? null : allocation.BankName.Trim(),
+                    Amount = paidAmount,
+                    AmountBeforeDiscount = amountBeforeDiscount,
+                    AmountAfterDiscount = amountAfterDiscount,
+                    DiscountDifference = RoundMoney(amountBeforeDiscount - amountAfterDiscount),
+                    TaxPercentage = financialPercentages.TaxPercentage,
+                    AdministrativeExpensesPercentage = financialPercentages.AdministrativeExpensesPercentage,
+                    FinalAmount = finalAmount,
+                    PaidAmount = paidAmount,
+                    PaymentDifference = Math.Abs(signedDifference),
+                    PaymentDifferenceType = signedDifference > 0
+                        ? PaymentDifferenceType.Increase
+                        : signedDifference < 0
+                            ? PaymentDifferenceType.Decrease
+                            : PaymentDifferenceType.Equal,
+                    StartDate = request.StartDate,
+                    EndDate = endDate,
+                    SettlementDays = settlementDays,
+                    Status = ChequeStatus.Pending
+                });
+            }
 
             var created = await _chequeRepository.TryAddRangeForClaimAsync(claim.Id, cheques, cancellationToken);
             if (!created)
@@ -215,5 +277,17 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             return Result.Success();
         }
+
+        private static decimal CalculateFinalAmount(
+            decimal amountAfterDiscount,
+            decimal taxPercentage,
+            decimal administrativeExpensesPercentage)
+        {
+            var totalDeductionPercentage = taxPercentage + administrativeExpensesPercentage;
+            return RoundMoney(amountAfterDiscount * (1 - totalDeductionPercentage / 100m));
+        }
+
+        private static decimal RoundMoney(decimal amount) =>
+            Math.Round(amount, 2, MidpointRounding.AwayFromZero);
     }
 }

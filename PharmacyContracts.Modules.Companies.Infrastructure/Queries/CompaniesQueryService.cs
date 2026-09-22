@@ -98,5 +98,18 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
                 .OrderBy(n => n)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<CompanyFinancialPercentagesContract?> GetFinancialPercentagesAsync(
+            Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
+        {
+            return await _context.Companies
+                .Where(c => c.PharmacyId == pharmacyId && c.Name == companyName)
+                .Select(c => new CompanyFinancialPercentagesContract
+                {
+                    TaxPercentage = c.TaxPercentage,
+                    AdministrativeExpensesPercentage = c.AdministrativeExpensesPercentage
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }

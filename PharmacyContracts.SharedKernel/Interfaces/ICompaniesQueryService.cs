@@ -16,5 +16,8 @@ namespace PharmacyContracts.SharedKernel.Interfaces
             Guid pharmacyId, IEnumerable<string> companyNames, CancellationToken cancellationToken = default);
 
         Task<List<string>> GetDepartmentNamesAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default);
+
+        Task<CompanyFinancialPercentagesContract?> GetFinancialPercentagesAsync(
+            Guid pharmacyId, string companyName, CancellationToken cancellationToken = default);
     }
 }

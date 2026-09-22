@@ -17,6 +17,16 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
 
         public decimal Amount { get; set; }
 
+        public decimal AmountBeforeDiscount { get; set; }
+        public decimal AmountAfterDiscount { get; set; }
+        public decimal DiscountDifference { get; set; }
+        public decimal TaxPercentage { get; set; }
+        public decimal AdministrativeExpensesPercentage { get; set; }
+        public decimal FinalAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal PaymentDifference { get; set; }
+        public PaymentDifferenceType PaymentDifferenceType { get; set; } = PaymentDifferenceType.Equal;
+
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int SettlementDays { get; set; }
