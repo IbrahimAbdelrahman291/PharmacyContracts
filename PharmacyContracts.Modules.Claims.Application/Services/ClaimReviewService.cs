@@ -31,8 +31,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (existingReview is not null)
                 return Result<ClaimReviewResponseDto>.Failure("تم إضافة مراجعة لهذه المطالبة من قبل.");
 
-            var validation = ValidateReviewInput(request.IsAccurate, request.CorrectedAmount,
-                request.CorrectedPrescriptionsCount, request.DiscrepancyType, out var discrepancyType);
+            var validation = ValidateReviewInput(claim, request.IsAccurate, request.CorrectedAmount,
+                request.CorrectedPrescriptionsCount, request.Differences, out var differenceAmount,
+                out var differenceType, out var parsedDifferences);
             if (!validation.Succeeded)
                 return Result<ClaimReviewResponseDto>.Failure(validation.Errors);
 
@@ -43,9 +44,16 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 IsAccurate = request.IsAccurate,
                 CorrectedAmount = request.IsAccurate ? null : request.CorrectedAmount,
                 CorrectedPrescriptionsCount = request.IsAccurate ? null : request.CorrectedPrescriptionsCount,
-                DiscrepancyType = request.IsAccurate ? DiscrepancyType.None : discrepancyType,
+                DifferenceAmount = differenceAmount,
+                DifferenceType = differenceType,
                 Notes = request.Notes,
-                WasEditedByPharmacy = false
+                WasEditedByPharmacy = false,
+                Differences = parsedDifferences.Select(d => new ClaimReviewDifference
+                {
+                    Value = d.Value,
+                    Reason = d.Reason,
+                    PharmacyId = pharmacyId
+                }).ToList()
             };
 
             await _claimReviewRepository.AddAsync(review, cancellationToken);
@@ -56,7 +64,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 : request.CorrectedPrescriptionsCount!.Value;
             claim.Status = ClaimStatus.Reviewed;
             claim.notes = request.Notes;
-            claim.DiscrepancyType = discrepancyType.ToString();
             _claimRepository.Update(claim);
 
             await _claimReviewRepository.SaveChangesAsync(cancellationToken);
@@ -75,18 +82,31 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (review is null)
                 return Result<ClaimReviewResponseDto>.Failure("لا توجد مراجعة لهذه المطالبة بعد.");
 
-            var validation = ValidateReviewInput(request.IsAccurate, request.CorrectedAmount,
-                request.CorrectedPrescriptionsCount, request.DiscrepancyType, out var discrepancyType);
+            var validation = ValidateReviewInput(claim, request.IsAccurate, request.CorrectedAmount,
+                request.CorrectedPrescriptionsCount, request.Differences, out var differenceAmount,
+                out var differenceType, out var parsedDifferences);
             if (!validation.Succeeded)
                 return Result<ClaimReviewResponseDto>.Failure(validation.Errors);
 
             review.IsAccurate = request.IsAccurate;
             review.CorrectedAmount = request.IsAccurate ? null : request.CorrectedAmount;
             review.CorrectedPrescriptionsCount = request.IsAccurate ? null : request.CorrectedPrescriptionsCount;
-            review.DiscrepancyType = request.IsAccurate ? DiscrepancyType.None : discrepancyType;
+            review.DifferenceAmount = differenceAmount;
+            review.DifferenceType = differenceType;
             review.Notes = request.Notes;
             review.WasEditedByPharmacy = true;
             review.LastEditedAt = DateTime.UtcNow;
+            review.Differences.Clear();
+            foreach (var difference in parsedDifferences)
+            {
+                review.Differences.Add(new ClaimReviewDifference
+                {
+                    ReviewId = review.Id,
+                    PharmacyId = pharmacyId,
+                    Value = difference.Value,
+                    Reason = difference.Reason
+                });
+            }
 
             _claimReviewRepository.Update(review);
 
@@ -116,16 +136,49 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto());
         }
 
-        private static Result ValidateReviewInput(bool isAccurate, decimal? correctedAmount,
-            int? correctedPrescriptionsCount, string? discrepancyTypeRaw, out DiscrepancyType discrepancyType)
+        public async Task<Result<ClaimReviewDifferencesResponseDto>> GetDifferencesByClaimIdAsync(
+            Guid pharmacyId, Guid claimId, CancellationToken cancellationToken = default)
         {
-            discrepancyType = DiscrepancyType.None;
+            var claim = await _claimRepository.GetByIdAsync(claimId, cancellationToken);
+            if (claim is null || claim.PharmacyId != pharmacyId)
+                return Result<ClaimReviewDifferencesResponseDto>.Failure("المطالبة غير موجودة.");
+
+            var review = await _claimReviewRepository.GetByClaimIdAsync(claimId, cancellationToken);
+            if (review is null)
+                return Result<ClaimReviewDifferencesResponseDto>.Failure("لا توجد مراجعة لهذه المطالبة.");
+
+            var reviewDto = review.ToResponseDto();
+            return Result<ClaimReviewDifferencesResponseDto>.Success(new ClaimReviewDifferencesResponseDto
+            {
+                ClaimId = claimId,
+                ReviewId = review.Id,
+                DifferenceAmount = review.DifferenceAmount,
+                DifferenceType = review.DifferenceType.ToString(),
+                Differences = reviewDto.Differences
+            });
+        }
+
+        private static Result ValidateReviewInput(Claim claim, bool isAccurate, decimal? correctedAmount,
+            int? correctedPrescriptionsCount, IReadOnlyCollection<ClaimReviewDifferenceRequestDto>? differences,
+            out decimal differenceAmount, out DifferenceType differenceType,
+            out List<(decimal Value, DifferenceReason Reason)> parsedDifferences)
+        {
+            differenceAmount = 0;
+            differenceType = DifferenceType.NoDifference;
+            parsedDifferences = [];
 
             if (isAccurate)
-                return Result.Success();
+            {
+                return differences is null || differences.Count == 0
+                    ? Result.Success()
+                    : Result.Failure("لا يمكن إضافة فروقات عندما تكون المطالبة صحيحة.");
+            }
 
             if (!correctedAmount.HasValue)
                 return Result.Failure("يجب إدخال المبلغ الصحيح عند الإشارة إلى وجود خطأ في المطالبة.");
+
+            if (correctedAmount.Value < 0)
+                return Result.Failure("لا يمكن أن يكون المبلغ الصحيح أقل من صفر.");
 
             if (!correctedPrescriptionsCount.HasValue)
                 return Result.Failure("يجب إدخال العدد الصحيح للوصفات عند الإشارة إلى وجود خطأ في المطالبة.");
@@ -133,8 +186,28 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (correctedPrescriptionsCount.Value < 0)
                 return Result.Failure("لا يمكن أن يكون العدد الصحيح للوصفات أقل من صفر.");
 
-            if (string.IsNullOrWhiteSpace(discrepancyTypeRaw) || !Enum.TryParse(discrepancyTypeRaw, ignoreCase: true, out discrepancyType) || discrepancyType == DiscrepancyType.None)
-                return Result.Failure("يجب تحديد سبب التباين.");
+            differenceAmount = Math.Abs(correctedAmount.Value - claim.ClaimAmount);
+            differenceType = correctedAmount.Value > claim.ClaimAmount
+                ? DifferenceType.Increase
+                : correctedAmount.Value < claim.ClaimAmount
+                    ? DifferenceType.Decrease
+                    : DifferenceType.NoDifference;
+
+            differences ??= [];
+            foreach (var difference in differences)
+            {
+                if (difference.Value <= 0)
+                    return Result.Failure("يجب أن تكون قيمة كل فرق أكبر من صفر.");
+
+                if (!Enum.TryParse<DifferenceReason>(difference.Reason, ignoreCase: true, out var reason)
+                    || !Enum.IsDefined(reason))
+                    return Result.Failure($"سبب الفرق '{difference.Reason}' غير صالح.");
+
+                parsedDifferences.Add((difference.Value, reason));
+            }
+
+            if (parsedDifferences.Sum(d => d.Value) != differenceAmount)
+                return Result.Failure($"يجب أن يساوي مجموع قيم الفروقات ({differenceAmount}).");
 
             return Result.Success();
         }

@@ -10,7 +10,9 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public bool IsAccurate { get; set; }
         public decimal? CorrectedAmount { get; set; }
         public int? CorrectedPrescriptionsCount { get; set; }
-        public string DiscrepancyType { get; set; } = string.Empty;
+        public decimal DifferenceAmount { get; set; }
+        public string DifferenceType { get; set; } = string.Empty;
+        public List<ClaimReviewDifferenceResponseDto> Differences { get; set; } = [];
         public string? Notes { get; set; }
         public bool WasEditedByPharmacy { get; set; }
         public DateTime CreatedAt { get; set; }

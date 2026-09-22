@@ -11,7 +11,9 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
         public bool IsAccurate { get; set; }
         public decimal? CorrectedAmount { get; set; }
         public int? CorrectedPrescriptionsCount { get; set; }
-        public DiscrepancyType DiscrepancyType { get; set; } = DiscrepancyType.None;
+        public decimal DifferenceAmount { get; set; }
+        public DifferenceType DifferenceType { get; set; } = DifferenceType.NoDifference;
+        public ICollection<ClaimReviewDifference> Differences { get; set; } = [];
         public string? Notes { get; set; }
 
         public bool WasEditedByPharmacy { get; set; }

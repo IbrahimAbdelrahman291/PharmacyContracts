@@ -88,5 +88,18 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
 
             return Ok(result.Data);
         }
+
+        [HttpGet("{id:guid}/reviews/differences")]
+        [Authorize(Roles = "Pharmacy")]
+        public async Task<IActionResult> GetReviewDifferences(Guid id, CancellationToken cancellationToken)
+        {
+            var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
+            var result = await _claimReviewService.GetDifferencesByClaimIdAsync(pharmacyId, id, cancellationToken);
+
+            if (!result.Succeeded)
+                return NotFound(new { errors = result.Errors });
+
+            return Ok(result.Data);
+        }
     }
 }

@@ -18,7 +18,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 PrescriptionsCount = claim.PrescriptionsCount,
                 CorrectedAmount = claim.CorrectedAmount,
                 CorrectedPrescriptionsCount = claim.CorrectedPrescriptionsCount,
-                DiscrepancyType = claim.DiscrepancyType,
                 Notes = claim.notes,
                 Status = claim.Status.ToString(),
                 CreatedAt = claim.CreatedAt

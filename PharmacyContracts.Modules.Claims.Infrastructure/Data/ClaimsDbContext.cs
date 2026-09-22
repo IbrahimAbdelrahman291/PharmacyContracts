@@ -10,6 +10,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data
 
         public DbSet<Claim> Claims => Set<Claim>();
         public DbSet<ClaimReview> ClaimReviews => Set<ClaimReview>();
+        public DbSet<ClaimReviewDifference> ClaimReviewDifferences => Set<ClaimReviewDifference>();
         public DbSet<Cheque> Cheques => Set<Cheque>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -17,6 +18,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ClaimsDbContext).Assembly);
             modelBuilder.Entity<Claim>().HasQueryFilter(c => !c.IsDeleted);
             modelBuilder.Entity<ClaimReview>().HasQueryFilter(r => !r.IsDeleted);
+            modelBuilder.Entity<ClaimReviewDifference>().HasQueryFilter(d => !d.IsDeleted);
             modelBuilder.Entity<Cheque>().HasQueryFilter(c => !c.IsDeleted);
         }
     }

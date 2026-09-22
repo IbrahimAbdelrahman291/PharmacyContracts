@@ -13,8 +13,14 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
             builder.HasKey(r => r.Id);
 
             builder.Property(r => r.CorrectedAmount).HasColumnType("decimal(18,2)");
-            builder.Property(r => r.DiscrepancyType).HasConversion<string>().HasMaxLength(30);
+            builder.Property(r => r.DifferenceAmount).HasColumnType("decimal(18,2)");
+            builder.Property(r => r.DifferenceType).HasConversion<string>().HasMaxLength(20);
             builder.Property(r => r.Notes).HasMaxLength(1000);
+
+            builder.HasMany(r => r.Differences)
+                .WithOne(d => d.Review)
+                .HasForeignKey(d => d.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(r => r.ClaimId).IsUnique();
         }

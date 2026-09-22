@@ -15,7 +15,16 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 IsAccurate = review.IsAccurate,
                 CorrectedAmount = review.CorrectedAmount,
                 CorrectedPrescriptionsCount = review.CorrectedPrescriptionsCount,
-                DiscrepancyType = review.DiscrepancyType.ToString(),
+                DifferenceAmount = review.DifferenceAmount,
+                DifferenceType = review.DifferenceType.ToString(),
+                Differences = review.Differences.Select(d => new ClaimReviewDifferenceResponseDto
+                {
+                    Id = d.Id,
+                    Value = d.Value,
+                    Reason = d.Reason.ToString(),
+                    ReviewId = d.ReviewId,
+                    PharmacyId = d.PharmacyId
+                }).ToList(),
                 Notes = review.Notes,
                 WasEditedByPharmacy = review.WasEditedByPharmacy,
                 CreatedAt = review.CreatedAt,

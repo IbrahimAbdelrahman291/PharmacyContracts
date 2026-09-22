@@ -8,5 +8,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Interfaces
         Task<Result<ClaimReviewResponseDto>> CreateAsync(Guid pharmacyId, Guid claimId, Guid reviewerUserId, CreateClaimReviewRequestDto request, CancellationToken cancellationToken = default);
         Task<Result<ClaimReviewResponseDto>> UpdateAsync(Guid pharmacyId, Guid claimId, UpdateClaimReviewRequestDto request, CancellationToken cancellationToken = default);
         Task<Result<ClaimReviewResponseDto>> GetByClaimIdAsync(Guid pharmacyId, Guid claimId, CancellationToken cancellationToken = default);
+        Task<Result<ClaimReviewDifferencesResponseDto>> GetDifferencesByClaimIdAsync(Guid pharmacyId, Guid claimId, CancellationToken cancellationToken = default);
     }
 }

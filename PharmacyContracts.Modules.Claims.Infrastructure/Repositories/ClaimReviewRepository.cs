@@ -11,10 +11,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public ClaimReviewRepository(ClaimsDbContext context) => _context = context;
 
         public Task<ClaimReview?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-            => _context.ClaimReviews.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+            => _context.ClaimReviews.Include(r => r.Differences).FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         public Task<ClaimReview?> GetByClaimIdAsync(Guid claimId, CancellationToken cancellationToken = default)
-            => _context.ClaimReviews.FirstOrDefaultAsync(r => r.ClaimId == claimId, cancellationToken);
+            => _context.ClaimReviews.Include(r => r.Differences).FirstOrDefaultAsync(r => r.ClaimId == claimId, cancellationToken);
 
         public async Task AddAsync(ClaimReview entity, CancellationToken cancellationToken = default)
             => await _context.ClaimReviews.AddAsync(entity, cancellationToken);
