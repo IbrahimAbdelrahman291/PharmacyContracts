@@ -17,23 +17,31 @@ public class BalanceService : IBalanceService
     }
 
     public async Task<Result<CompanyBalanceResponseDto>> GetCompanyBalanceAsync(
-        Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
+        Guid pharmacyId, string companyName, int? month, int? year, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(companyName))
             return Result<CompanyBalanceResponseDto>.Failure("اسم الشركة مطلوب.");
 
+        var periodValidation = ValidatePeriod(month, year);
+        if (!periodValidation.Succeeded)
+            return Result<CompanyBalanceResponseDto>.Failure(periodValidation.Errors);
+
         var normalizedCompanyName = companyName.Trim();
-        var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, normalizedCompanyName, cancellationToken);
-        var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, normalizedCompanyName, cancellationToken);
+        var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, normalizedCompanyName, month, year, cancellationToken);
+        var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, normalizedCompanyName, month, year, cancellationToken);
 
         return Result<CompanyBalanceResponseDto>.Success(CreateCompanyBalance(normalizedCompanyName, totalClaimed, totalCollected));
     }
 
     public async Task<Result<TotalBalanceResponseDto>> GetTotalBalanceAsync(
-        Guid pharmacyId, CancellationToken cancellationToken = default)
+        Guid pharmacyId, int? month, int? year, CancellationToken cancellationToken = default)
     {
-        var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, null, cancellationToken);
-        var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, null, cancellationToken);
+        var periodValidation = ValidatePeriod(month, year);
+        if (!periodValidation.Succeeded)
+            return Result<TotalBalanceResponseDto>.Failure(periodValidation.Errors);
+
+        var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, null, month, year, cancellationToken);
+        var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, null, month, year, cancellationToken);
 
         return Result<TotalBalanceResponseDto>.Success(new TotalBalanceResponseDto
         {
@@ -44,11 +52,15 @@ public class BalanceService : IBalanceService
     }
 
     public async Task<Result<AgingReportResponseDto>> GetAgingReportAsync(
-        Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+        Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
     {
+        var periodValidation = ValidatePeriod(month, year);
+        if (!periodValidation.Succeeded)
+            return Result<AgingReportResponseDto>.Failure(periodValidation.Errors);
+
         var normalizedCompanyName = string.IsNullOrWhiteSpace(companyName) ? null : companyName.Trim();
         var cheques = await _chequeRepository.GetUnpaidOrPartiallyPaidChequesAsync(
-            pharmacyId, normalizedCompanyName, cancellationToken);
+            pharmacyId, normalizedCompanyName, month, year, cancellationToken);
         var today = DateTime.UtcNow.Date;
         var response = new AgingReportResponseDto();
 
@@ -78,18 +90,22 @@ public class BalanceService : IBalanceService
     }
 
     public async Task<Result<List<CompanyBalanceResponseDto>>> GetTopDebtorsAsync(
-        Guid pharmacyId, int top, CancellationToken cancellationToken = default)
+        Guid pharmacyId, int top, int? month, int? year, CancellationToken cancellationToken = default)
     {
         if (top <= 0)
             return Result<List<CompanyBalanceResponseDto>>.Failure("يجب أن تكون قيمة top أكبر من صفر.");
 
-        var companyNames = await _claimRepository.GetDistinctCompanyNamesAsync(pharmacyId, cancellationToken);
+        var periodValidation = ValidatePeriod(month, year);
+        if (!periodValidation.Succeeded)
+            return Result<List<CompanyBalanceResponseDto>>.Failure(periodValidation.Errors);
+
+        var companyNames = await _claimRepository.GetDistinctCompanyNamesAsync(pharmacyId, month, year, cancellationToken);
         var balances = new List<CompanyBalanceResponseDto>(companyNames.Count);
 
         foreach (var companyName in companyNames)
         {
-            var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, companyName, cancellationToken);
-            var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, companyName, cancellationToken);
+            var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, companyName, month, year, cancellationToken);
+            var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, companyName, month, year, cancellationToken);
             balances.Add(CreateCompanyBalance(companyName, totalClaimed, totalCollected));
         }
 
@@ -105,4 +121,15 @@ public class BalanceService : IBalanceService
             TotalCollected = totalCollected,
             Balance = totalClaimed - totalCollected
         };
+
+    private static Result ValidatePeriod(int? month, int? year)
+    {
+        if (month is < 1 or > 12)
+            return Result.Failure("Month must be between 1 and 12.");
+
+        if (year is < 1 or > 9999)
+            return Result.Failure("Year must be between 1 and 9999.");
+
+        return Result.Success();
+    }
 }

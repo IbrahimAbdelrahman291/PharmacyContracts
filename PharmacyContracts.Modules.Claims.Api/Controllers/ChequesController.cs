@@ -64,10 +64,12 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
         [HttpGet("upcoming-due")]
         public async Task<IActionResult> GetUpcomingDue(
             [FromQuery] int days = 7,
+            [FromQuery] int? month = null,
+            [FromQuery] int? year = null,
             CancellationToken cancellationToken = default)
         {
             var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
-            var result = await _chequeService.GetUpcomingDueAsync(pharmacyId, days, cancellationToken);
+            var result = await _chequeService.GetUpcomingDueAsync(pharmacyId, days, month, year, cancellationToken);
 
             if (!result.Succeeded)
                 return BadRequest(new { errors = result.Errors });

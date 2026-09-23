@@ -44,12 +44,18 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             return query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
         }
 
-        public async Task<decimal> GetTotalCollectedAsync(Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+        public async Task<decimal> GetTotalCollectedAsync(Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
         {
             var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
 
             if (!string.IsNullOrWhiteSpace(companyName))
                 query = query.Where(c => c.CompanyName == companyName);
+
+            if (month.HasValue)
+                query = query.Where(c => c.ClaimMonth == month.Value);
+
+            if (year.HasValue)
+                query = query.Where(c => c.ClaimYear == year.Value);
 
             return await query.SumAsync(c => (decimal?)(
                 c.Status == ChequeStatus.PaidInFull
@@ -60,7 +66,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         }
 
         public Task<List<UnpaidChequeBalanceDto>> GetUnpaidOrPartiallyPaidChequesAsync(
-            Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+            Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
         {
             var query = _context.Cheques.Where(c =>
                 c.PharmacyId == pharmacyId &&
@@ -72,6 +78,12 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             if (!string.IsNullOrWhiteSpace(companyName))
                 query = query.Where(c => c.CompanyName == companyName);
 
+            if (month.HasValue)
+                query = query.Where(c => c.ClaimMonth == month.Value);
+
+            if (year.HasValue)
+                query = query.Where(c => c.ClaimYear == year.Value);
+
             return query.Select(c => new UnpaidChequeBalanceDto
             {
                 EndDate = c.EndDate,
@@ -81,17 +93,23 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             }).ToListAsync(cancellationToken);
         }
 
-        public Task<List<Cheque>> GetUpcomingDueAsync(Guid pharmacyId, int days, CancellationToken cancellationToken = default)
+        public Task<List<Cheque>> GetUpcomingDueAsync(Guid pharmacyId, int days, int? month, int? year, CancellationToken cancellationToken = default)
         {
             var today = DateTime.UtcNow.Date;
             var endDate = today.AddDays(days);
 
-            return _context.Cheques
+            var query = _context.Cheques
                 .Where(c => c.PharmacyId == pharmacyId &&
                             c.Status == ChequeStatus.Pending &&
-                            c.EndDate >= today && c.EndDate <= endDate)
-                .OrderBy(c => c.EndDate)
-                .ToListAsync(cancellationToken);
+                            c.EndDate >= today && c.EndDate <= endDate);
+
+            if (month.HasValue)
+                query = query.Where(c => c.ClaimMonth == month.Value);
+
+            if (year.HasValue)
+                query = query.Where(c => c.ClaimYear == year.Value);
+
+            return query.OrderBy(c => c.EndDate).ToListAsync(cancellationToken);
         }
 
         public Task<List<Cheque>> GetOverdueCandidatesAsync(DateTime asOfDate, CancellationToken cancellationToken = default)

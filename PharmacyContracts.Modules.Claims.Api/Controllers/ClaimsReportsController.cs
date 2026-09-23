@@ -22,10 +22,12 @@ public class ClaimsReportsController : ControllerBase
     [HttpGet("company-balance")]
     public async Task<IActionResult> GetCompanyBalance(
         [FromQuery] string companyName,
+        [FromQuery] int? month,
+        [FromQuery] int? year,
         CancellationToken cancellationToken)
     {
         var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
-        var result = await _balanceService.GetCompanyBalanceAsync(pharmacyId, companyName, cancellationToken);
+        var result = await _balanceService.GetCompanyBalanceAsync(pharmacyId, companyName, month, year, cancellationToken);
 
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors });
@@ -34,30 +36,43 @@ public class ClaimsReportsController : ControllerBase
     }
 
     [HttpGet("total-balance")]
-    public async Task<IActionResult> GetTotalBalance(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetTotalBalance(
+        [FromQuery] int? month,
+        [FromQuery] int? year,
+        CancellationToken cancellationToken)
     {
         var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
-        var result = await _balanceService.GetTotalBalanceAsync(pharmacyId, cancellationToken);
+        var result = await _balanceService.GetTotalBalanceAsync(pharmacyId, month, year, cancellationToken);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors });
+
         return Ok(result.Data);
     }
 
     [HttpGet("aging")]
     public async Task<IActionResult> GetAgingReport(
         [FromQuery] string? companyName,
+        [FromQuery] int? month,
+        [FromQuery] int? year,
         CancellationToken cancellationToken)
     {
         var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
-        var result = await _balanceService.GetAgingReportAsync(pharmacyId, companyName, cancellationToken);
+        var result = await _balanceService.GetAgingReportAsync(pharmacyId, companyName, month, year, cancellationToken);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors });
+
         return Ok(result.Data);
     }
 
     [HttpGet("top-debtors")]
     public async Task<IActionResult> GetTopDebtors(
         [FromQuery] int top = 10,
+        [FromQuery] int? month = null,
+        [FromQuery] int? year = null,
         CancellationToken cancellationToken = default)
     {
         var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
-        var result = await _balanceService.GetTopDebtorsAsync(pharmacyId, top, cancellationToken);
+        var result = await _balanceService.GetTopDebtorsAsync(pharmacyId, top, month, year, cancellationToken);
 
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors });

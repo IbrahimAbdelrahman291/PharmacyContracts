@@ -225,12 +225,18 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         }
 
         public async Task<Result<List<ChequeResponseDto>>> GetUpcomingDueAsync(
-            Guid pharmacyId, int days, CancellationToken cancellationToken = default)
+            Guid pharmacyId, int days, int? month, int? year, CancellationToken cancellationToken = default)
         {
             if (days < 0)
                 return Result<List<ChequeResponseDto>>.Failure("عدد الأيام يجب ألا يكون سالبًا.");
 
-            var cheques = await _chequeRepository.GetUpcomingDueAsync(pharmacyId, days, cancellationToken);
+            if (month is < 1 or > 12)
+                return Result<List<ChequeResponseDto>>.Failure("Month must be between 1 and 12.");
+
+            if (year is < 1 or > 9999)
+                return Result<List<ChequeResponseDto>>.Failure("Year must be between 1 and 9999.");
+
+            var cheques = await _chequeRepository.GetUpcomingDueAsync(pharmacyId, days, month, year, cancellationToken);
             return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
         }
 

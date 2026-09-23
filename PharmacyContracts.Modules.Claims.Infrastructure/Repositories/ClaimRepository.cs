@@ -29,24 +29,36 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             return query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
         }
 
-        public async Task<decimal> GetTotalClaimedAsync(Guid pharmacyId, string? companyName, CancellationToken cancellationToken = default)
+        public async Task<decimal> GetTotalClaimedAsync(Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
         {
             var query = _context.Claims.Where(c => c.PharmacyId == pharmacyId);
 
             if (!string.IsNullOrWhiteSpace(companyName))
                 query = query.Where(c => c.CompanyName == companyName);
 
+            if (month.HasValue)
+                query = query.Where(c => c.Month == month.Value);
+
+            if (year.HasValue)
+                query = query.Where(c => c.Year == year.Value);
+
             return await query.SumAsync(
                 c => (decimal?)(c.CorrectedAmount ?? c.ClaimAmountAfterDiscount),
                 cancellationToken) ?? 0m;
         }
 
-        public Task<List<string>> GetDistinctCompanyNamesAsync(Guid pharmacyId, CancellationToken cancellationToken = default)
-            => _context.Claims
-                .Where(c => c.PharmacyId == pharmacyId)
-                .Select(c => c.CompanyName)
-                .Distinct()
-                .ToListAsync(cancellationToken);
+        public Task<List<string>> GetDistinctCompanyNamesAsync(Guid pharmacyId, int? month, int? year, CancellationToken cancellationToken = default)
+        {
+            var query = _context.Claims.Where(c => c.PharmacyId == pharmacyId);
+
+            if (month.HasValue)
+                query = query.Where(c => c.Month == month.Value);
+
+            if (year.HasValue)
+                query = query.Where(c => c.Year == year.Value);
+
+            return query.Select(c => c.CompanyName).Distinct().ToListAsync(cancellationToken);
+        }
 
         public async Task AddAsync(Claim entity, CancellationToken cancellationToken = default)
             => await _context.Claims.AddAsync(entity, cancellationToken);
