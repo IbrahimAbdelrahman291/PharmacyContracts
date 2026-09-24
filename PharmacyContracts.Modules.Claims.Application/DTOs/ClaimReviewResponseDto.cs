@@ -13,7 +13,6 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public decimal DifferenceAmount { get; set; }
         public string DifferenceType { get; set; } = string.Empty;
         public List<ClaimReviewDifferenceResponseDto> Differences { get; set; } = [];
-        public string? Notes { get; set; }
         public bool WasEditedByPharmacy { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastEditedAt { get; set; }

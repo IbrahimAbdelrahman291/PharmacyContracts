@@ -46,12 +46,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 CorrectedPrescriptionsCount = request.IsAccurate ? null : request.CorrectedPrescriptionsCount,
                 DifferenceAmount = differenceAmount,
                 DifferenceType = differenceType,
-                Notes = request.Notes,
                 WasEditedByPharmacy = false,
                 Differences = parsedDifferences.Select(d => new ClaimReviewDifference
                 {
                     Value = d.Value,
                     Reason = d.Reason,
+                    Notes = d.Notes,
                     PharmacyId = pharmacyId
                 }).ToList()
             };
@@ -63,7 +63,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ? claim.PrescriptionsCount
                 : request.CorrectedPrescriptionsCount!.Value;
             claim.Status = ClaimStatus.Reviewed;
-            claim.notes = request.Notes;
             _claimRepository.Update(claim);
 
             await _claimReviewRepository.SaveChangesAsync(cancellationToken);
@@ -93,7 +92,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             review.CorrectedPrescriptionsCount = request.IsAccurate ? null : request.CorrectedPrescriptionsCount;
             review.DifferenceAmount = differenceAmount;
             review.DifferenceType = differenceType;
-            review.Notes = request.Notes;
             review.WasEditedByPharmacy = true;
             review.LastEditedAt = DateTime.UtcNow;
             review.Differences.Clear();
@@ -104,7 +102,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     ReviewId = review.Id,
                     PharmacyId = pharmacyId,
                     Value = difference.Value,
-                    Reason = difference.Reason
+                    Reason = difference.Reason,
+                    Notes = difference.Notes
                 });
             }
 
@@ -115,7 +114,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 ? claim.PrescriptionsCount
                 : request.CorrectedPrescriptionsCount!.Value;
             claim.Status = ClaimStatus.EditedAfterReview;
-            claim.notes = request.Notes;
             _claimRepository.Update(claim);
 
             await _claimReviewRepository.SaveChangesAsync(cancellationToken);
@@ -161,7 +159,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         private static Result ValidateReviewInput(Claim claim, bool isAccurate, decimal? correctedAmount,
             int? correctedPrescriptionsCount, IReadOnlyCollection<ClaimReviewDifferenceRequestDto>? differences,
             out decimal differenceAmount, out DifferenceType differenceType,
-            out List<(decimal Value, DifferenceReason Reason)> parsedDifferences)
+            out List<(decimal Value, DifferenceReason Reason, string? Notes)> parsedDifferences)
         {
             differenceAmount = 0;
             differenceType = DifferenceType.NoDifference;
@@ -203,11 +201,11 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     || !Enum.IsDefined(reason))
                     return Result.Failure($"سبب الفرق '{difference.Reason}' غير صالح.");
 
-                parsedDifferences.Add((difference.Value, reason));
+                parsedDifferences.Add((difference.Value, reason, difference.Notes));
             }
 
-            if (parsedDifferences.Sum(d => d.Value) != differenceAmount)
-                return Result.Failure($"يجب أن يساوي مجموع قيم الفروقات ({differenceAmount}).");
+            if (parsedDifferences.Sum(d => d.Value) < differenceAmount)
+                return Result.Failure($"يجب ألا يقل مجموع قيم الفروقات عن مبلغ الفرق ({differenceAmount}).");
 
             return Result.Success();
         }

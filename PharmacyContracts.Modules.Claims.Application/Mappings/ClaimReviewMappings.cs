@@ -22,10 +22,10 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                     Id = d.Id,
                     Value = d.Value,
                     Reason = d.Reason.ToString(),
+                    Notes = d.Notes,
                     ReviewId = d.ReviewId,
                     PharmacyId = d.PharmacyId
                 }).ToList(),
-                Notes = review.Notes,
                 WasEditedByPharmacy = review.WasEditedByPharmacy,
                 CreatedAt = review.CreatedAt,
                 LastEditedAt = review.LastEditedAt

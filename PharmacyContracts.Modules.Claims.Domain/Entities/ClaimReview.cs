@@ -14,7 +14,6 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
         public decimal DifferenceAmount { get; set; }
         public DifferenceType DifferenceType { get; set; } = DifferenceType.NoDifference;
         public ICollection<ClaimReviewDifference> Differences { get; set; } = [];
-        public string? Notes { get; set; }
 
         public bool WasEditedByPharmacy { get; set; }
         public DateTime? LastEditedAt { get; set; }

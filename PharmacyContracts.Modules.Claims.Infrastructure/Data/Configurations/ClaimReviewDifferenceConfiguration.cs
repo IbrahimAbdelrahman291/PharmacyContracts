@@ -13,6 +13,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
 
             builder.Property(d => d.Value).HasColumnType("decimal(18,2)");
             builder.Property(d => d.Reason).HasConversion<string>().HasMaxLength(30);
+            builder.Property(d => d.Notes).HasMaxLength(1000);
 
             builder.HasIndex(d => d.ReviewId);
             builder.HasIndex(d => d.PharmacyId);
