@@ -5,8 +5,11 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
 {
     public static class ClaimReviewMappings
     {
-        public static ClaimReviewResponseDto ToResponseDto(this ClaimReview review)
+        public static ClaimReviewResponseDto ToResponseDto(this ClaimReview review, Claim claim)
         {
+            var correctedAmount = review.CorrectedAmount ?? claim.ClaimAmount;
+            var correctedPrescriptionsCount = review.CorrectedPrescriptionsCount ?? claim.PrescriptionsCount;
+
             return new ClaimReviewResponseDto
             {
                 Id = review.Id,
@@ -15,6 +18,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 IsAccurate = review.IsAccurate,
                 CorrectedAmount = review.CorrectedAmount,
                 CorrectedPrescriptionsCount = review.CorrectedPrescriptionsCount,
+                AmountBeforeDiscount = claim.ClaimAmount,
+                AmountDifference = Math.Abs(correctedAmount - claim.ClaimAmount),
+                AmountDifferenceType = GetDifferenceType(correctedAmount, claim.ClaimAmount),
+                PrescriptionsCount = claim.PrescriptionsCount,
+                PrescriptionsCountDifference = Math.Abs(correctedPrescriptionsCount - claim.PrescriptionsCount),
+                PrescriptionsCountDifferenceType = GetDifferenceType(correctedPrescriptionsCount, claim.PrescriptionsCount),
                 DifferenceAmount = review.DifferenceAmount,
                 DifferenceType = review.DifferenceType.ToString(),
                 Differences = review.Differences.Select(d => new ClaimReviewDifferenceResponseDto
@@ -30,6 +39,15 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 CreatedAt = review.CreatedAt,
                 LastEditedAt = review.LastEditedAt
             };
+        }
+
+        private static string GetDifferenceType(decimal correctedValue, decimal originalValue)
+        {
+            return correctedValue > originalValue
+                ? "Increase"
+                : correctedValue < originalValue
+                    ? "Decrease"
+                    : "NoDifference";
         }
     }
 }

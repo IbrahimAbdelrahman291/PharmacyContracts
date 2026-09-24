@@ -67,7 +67,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             await _claimReviewRepository.SaveChangesAsync(cancellationToken);
 
-            return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto());
+            return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto(claim));
         }
 
         public async Task<Result<ClaimReviewResponseDto>> UpdateAsync(
@@ -118,7 +118,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             await _claimReviewRepository.SaveChangesAsync(cancellationToken);
 
-            return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto());
+            return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto(claim));
         }
 
         public async Task<Result<ClaimReviewResponseDto>> GetByClaimIdAsync(Guid pharmacyId, Guid claimId, CancellationToken cancellationToken = default)
@@ -131,7 +131,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (review is null)
                 return Result<ClaimReviewResponseDto>.Failure("لا توجد مراجعة لهذه المطالبة.");
 
-            return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto());
+            return Result<ClaimReviewResponseDto>.Success(review.ToResponseDto(claim));
         }
 
         public async Task<Result<ClaimReviewDifferencesResponseDto>> GetDifferencesByClaimIdAsync(
@@ -145,11 +145,19 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (review is null)
                 return Result<ClaimReviewDifferencesResponseDto>.Failure("لا توجد مراجعة لهذه المطالبة.");
 
-            var reviewDto = review.ToResponseDto();
+            var reviewDto = review.ToResponseDto(claim);
             return Result<ClaimReviewDifferencesResponseDto>.Success(new ClaimReviewDifferencesResponseDto
             {
                 ClaimId = claimId,
                 ReviewId = review.Id,
+                AmountBeforeDiscount = reviewDto.AmountBeforeDiscount,
+                CorrectedAmount = reviewDto.CorrectedAmount,
+                AmountDifference = reviewDto.AmountDifference,
+                AmountDifferenceType = reviewDto.AmountDifferenceType,
+                PrescriptionsCount = reviewDto.PrescriptionsCount,
+                CorrectedPrescriptionsCount = reviewDto.CorrectedPrescriptionsCount,
+                PrescriptionsCountDifference = reviewDto.PrescriptionsCountDifference,
+                PrescriptionsCountDifferenceType = reviewDto.PrescriptionsCountDifferenceType,
                 DifferenceAmount = review.DifferenceAmount,
                 DifferenceType = review.DifferenceType.ToString(),
                 Differences = reviewDto.Differences
