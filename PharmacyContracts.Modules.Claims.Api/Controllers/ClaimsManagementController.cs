@@ -53,8 +53,20 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
         [Authorize(Roles = "ClaimsReviewer")]
         public async Task<IActionResult> CreateReview(Guid id, [FromBody] CreateClaimReviewRequestDto request, CancellationToken cancellationToken)
         {
-            var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;   // ← إضافة
-            var reviewerUserId = _currentUserService.UserId!.Value;
+            if (_currentUserService.UserId is not Guid reviewerUserId)
+                return Unauthorized(new { errors = new[] { "The authenticated user identifier is missing or invalid." } });
+
+            if (_currentUserService.EffectivePharmacyId is not Guid pharmacyId)
+            {
+                return StatusCode(403, new
+                {
+                    errors = new[]
+                    {
+                        "The reviewer is not associated with a pharmacy. Sign in again; if the problem continues, recreate or update the reviewer account."
+                    }
+                });
+            }
+
             var result = await _claimReviewService.CreateAsync(pharmacyId, id, reviewerUserId, request, cancellationToken);
 
             if (!result.Succeeded)
