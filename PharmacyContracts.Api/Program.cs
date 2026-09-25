@@ -1,6 +1,7 @@
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PharmacyContracts.Api.Hangfire;
 using PharmacyContracts.Api.Services;
@@ -13,6 +14,7 @@ using PharmacyContracts.Modules.Auth.Infrastructure.Seeding;
 using PharmacyContracts.Modules.Claims.Api.Controllers;
 using PharmacyContracts.Modules.Claims.Application.DependencyInjection;
 using PharmacyContracts.Modules.Claims.Infrastructure.BackgroundJobs;
+using PharmacyContracts.Modules.Claims.Infrastructure.Data;
 using PharmacyContracts.Modules.Claims.Infrastructure.DependencyInjection;
 using PharmacyContracts.Modules.Companies.Api.Controllers;
 using PharmacyContracts.Modules.Companies.Application.DependencyInjection;
@@ -119,8 +121,7 @@ public partial class Program
         builder.Services.AddAuthorization();
 
         var app = builder.Build();
-
-        // Seed SuperAdmin
+        // Seeding SuperAdmin
         using (var scope = app.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
