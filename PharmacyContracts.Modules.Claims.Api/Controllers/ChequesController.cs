@@ -86,7 +86,7 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
             if (!result.Succeeded)
                 return BadRequest(new { errors = result.Errors });
 
-            return NoContent();
+            return Ok(result.Data);
         }
     }
 }

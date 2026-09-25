@@ -49,20 +49,19 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 return Result<ChequeCreationPreparationDto>.Failure("الشركة غير موجودة أو لا تحتوي على إعدادات مالية.");
 
             var amountBeforeDiscount = RoundMoney(claim.ClaimAmount);
-            var amountAfterDiscount = RoundMoney(claim.ClaimAmountAfterDiscount);
+            var correctAmount = RoundMoney(claim.CorrectedAmount.Value);
 
             return Result<ChequeCreationPreparationDto>.Success(new ChequeCreationPreparationDto
             {
                 ClaimId = claim.Id,
                 CompanyName = claim.CompanyName,
-                Amount = claim.CorrectedAmount.Value,
                 AmountBeforeDiscount = amountBeforeDiscount,
-                AmountAfterDiscount = amountAfterDiscount,
-                DiscountDifference = RoundMoney(amountBeforeDiscount - amountAfterDiscount),
+                CorrectAmount = correctAmount,
+                AmountDifference = Math.Abs(RoundMoney(correctAmount - amountBeforeDiscount)),
                 TaxPercentage = financialPercentages.TaxPercentage,
                 AdministrativeExpensesPercentage = financialPercentages.AdministrativeExpensesPercentage,
                 FinalAmount = CalculateFinalAmount(
-                    amountAfterDiscount,
+                    correctAmount,
                     financialPercentages.TaxPercentage,
                     financialPercentages.AdministrativeExpensesPercentage),
                 SettlementDays = settlementDays,
@@ -145,7 +144,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             var endDate = request.StartDate.AddDays(settlementDays);
             var cheques = new List<Cheque>(request.Allocations.Count);
             decimal allocatedBeforeDiscount = 0;
-            decimal allocatedAfterDiscount = 0;
 
             for (var index = 0; index < request.Allocations.Count; index++)
             {
@@ -155,19 +153,14 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 var amountBeforeDiscount = isLast
                     ? RoundMoney(claim.ClaimAmount - allocatedBeforeDiscount)
                     : RoundMoney(claim.ClaimAmount * ratio);
-                var amountAfterDiscount = isLast
-                    ? RoundMoney(claim.ClaimAmountAfterDiscount - allocatedAfterDiscount)
-                    : RoundMoney(claim.ClaimAmountAfterDiscount * ratio);
+                var correctAmount = RoundMoney(allocation.Amount);
 
                 allocatedBeforeDiscount += amountBeforeDiscount;
-                allocatedAfterDiscount += amountAfterDiscount;
 
                 var finalAmount = CalculateFinalAmount(
-                    amountAfterDiscount,
+                    correctAmount,
                     financialPercentages.TaxPercentage,
                     financialPercentages.AdministrativeExpensesPercentage);
-                var paidAmount = RoundMoney(allocation.Amount);
-                var signedDifference = paidAmount - finalAmount;
 
                 cheques.Add(new Cheque
                 {
@@ -179,20 +172,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     DepartmentName = allocation.DepartmentName,
                     ChequeNumber = string.IsNullOrWhiteSpace(allocation.ChequeNumber) ? null : allocation.ChequeNumber.Trim(),
                     BankName = string.IsNullOrWhiteSpace(allocation.BankName) ? null : allocation.BankName.Trim(),
-                    Amount = paidAmount,
                     AmountBeforeDiscount = amountBeforeDiscount,
-                    AmountAfterDiscount = amountAfterDiscount,
-                    DiscountDifference = RoundMoney(amountBeforeDiscount - amountAfterDiscount),
+                    CorrectAmount = correctAmount,
+                    AmountDifference = Math.Abs(RoundMoney(correctAmount - amountBeforeDiscount)),
                     TaxPercentage = financialPercentages.TaxPercentage,
                     AdministrativeExpensesPercentage = financialPercentages.AdministrativeExpensesPercentage,
                     FinalAmount = finalAmount,
-                    PaidAmount = paidAmount,
-                    PaymentDifference = Math.Abs(signedDifference),
-                    PaymentDifferenceType = signedDifference > 0
-                        ? PaymentDifferenceType.Increase
-                        : signedDifference < 0
-                            ? PaymentDifferenceType.Decrease
-                            : PaymentDifferenceType.Equal,
                     StartDate = request.StartDate,
                     EndDate = endDate,
                     SettlementDays = settlementDays,
@@ -240,14 +225,14 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
         }
 
-        public async Task<Result> UpdateStatusAsync(Guid pharmacyId, Guid chequeId, UpdateChequeStatusRequestDto request, CancellationToken cancellationToken = default)
+        public async Task<Result<ChequeResponseDto>> UpdateStatusAsync(Guid pharmacyId, Guid chequeId, UpdateChequeStatusRequestDto request, CancellationToken cancellationToken = default)
         {
             var cheque = await _chequeRepository.GetByIdAsync(chequeId, cancellationToken);
             if (cheque is null || cheque.PharmacyId != pharmacyId)
-                return Result.Failure("الشيك غير موجود.");
+                return Result<ChequeResponseDto>.Failure("الشيك غير موجود.");
 
             if (!Enum.TryParse<ChequeStatus>(request.Status, ignoreCase: true, out var status) || status == ChequeStatus.Overdue)
-                return Result.Failure("حالة غير صحيحة. القيم المسموحة: Pending, PaidInFull, PartiallyPaid, Deferred.");
+                return Result<ChequeResponseDto>.Failure("حالة غير صحيحة. القيم المسموحة: Pending, PaidInFull, PartiallyPaid, Deferred.");
 
             var chequeNumber = request.ChequeNumber?.Trim();
             var bankName = request.BankName?.Trim();
@@ -256,21 +241,54 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (updatesChequeDetails)
             {
                 if (string.IsNullOrEmpty(chequeNumber) || string.IsNullOrEmpty(bankName))
-                    return Result.Failure("يجب إدخال رقم الشيك واسم البنك معًا.");
+                    return Result<ChequeResponseDto>.Failure("يجب إدخال رقم الشيك واسم البنك معًا.");
 
                 if (chequeNumber.Length > 50 || bankName.Length > 200)
-                    return Result.Failure("رقم الشيك أو اسم البنك أطول من الحد المسموح.");
+                    return Result<ChequeResponseDto>.Failure("رقم الشيك أو اسم البنك أطول من الحد المسموح.");
 
                 if (await _chequeRepository.ExistsByChequeNumberAsync(
                         pharmacyId, chequeNumber, chequeId, cancellationToken))
-                    return Result.Failure("رقم الشيك مستخدم من قبل.");
+                    return Result<ChequeResponseDto>.Failure("رقم الشيك مستخدم من قبل.");
             }
 
             if (status == ChequeStatus.PartiallyPaid && !request.RemainingAmount.HasValue)
-                return Result.Failure("يجب إدخال المبلغ المتبقي عند اختيار السداد الجزئي.");
+                return Result<ChequeResponseDto>.Failure("يجب إدخال المبلغ المتبقي عند اختيار السداد الجزئي.");
+
+            var isReceived = status is ChequeStatus.PaidInFull or ChequeStatus.PartiallyPaid;
+            if (isReceived && (!request.ActualAmount.HasValue || !request.ChequeDate.HasValue))
+                return Result<ChequeResponseDto>.Failure("يجب إدخال المبلغ الفعلي وتاريخ الشيك عند استلام الشيك.");
+
+            if (request.ActualAmount is < 0)
+                return Result<ChequeResponseDto>.Failure("لا يمكن أن يكون المبلغ الفعلي أقل من صفر.");
+
+            if (request.RemainingAmount is < 0)
+                return Result<ChequeResponseDto>.Failure("لا يمكن أن يكون المبلغ المتبقي أقل من صفر.");
+
+            if (request.RemainingAmount > cheque.FinalAmount)
+                return Result<ChequeResponseDto>.Failure("لا يمكن أن يكون المبلغ المتبقي أكبر من المبلغ النهائي.");
 
             cheque.Status = status;
             cheque.RemainingAmount = status == ChequeStatus.PartiallyPaid ? request.RemainingAmount : null;
+
+            if (isReceived)
+            {
+                cheque.ActualAmount = RoundMoney(request.ActualAmount!.Value);
+                cheque.ChequeDate = request.ChequeDate!.Value;
+                var signedDifference = cheque.ActualAmount.Value - cheque.FinalAmount;
+                cheque.PaymentDifference = Math.Abs(RoundMoney(signedDifference));
+                cheque.PaymentDifferenceType = signedDifference > 0
+                    ? PaymentDifferenceType.Increase
+                    : signedDifference < 0
+                        ? PaymentDifferenceType.Decrease
+                        : PaymentDifferenceType.Equal;
+            }
+            else
+            {
+                cheque.ActualAmount = null;
+                cheque.ChequeDate = null;
+                cheque.PaymentDifference = null;
+                cheque.PaymentDifferenceType = null;
+            }
 
             if (updatesChequeDetails)
             {
@@ -281,16 +299,16 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             _chequeRepository.Update(cheque);
             await _chequeRepository.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
+            return Result<ChequeResponseDto>.Success(cheque.ToResponseDto());
         }
 
         private static decimal CalculateFinalAmount(
-            decimal amountAfterDiscount,
+            decimal correctAmount,
             decimal taxPercentage,
             decimal administrativeExpensesPercentage)
         {
             var totalDeductionPercentage = taxPercentage + administrativeExpensesPercentage;
-            return RoundMoney(amountAfterDiscount * (1 - totalDeductionPercentage / 100m));
+            return RoundMoney(correctAmount * (1 - totalDeductionPercentage / 100m));
         }
 
         private static decimal RoundMoney(decimal amount) =>

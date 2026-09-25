@@ -59,9 +59,9 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
 
             return await query.SumAsync(c => (decimal?)(
                 c.Status == ChequeStatus.PaidInFull
-                    ? c.Amount
+                    ? c.ActualAmount ?? 0m
                     : c.Status == ChequeStatus.PartiallyPaid
-                        ? c.Amount - (c.RemainingAmount ?? 0m)
+                        ? c.ActualAmount ?? 0m
                         : 0m), cancellationToken) ?? 0m;
         }
 
@@ -87,7 +87,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             return query.Select(c => new UnpaidChequeBalanceDto
             {
                 EndDate = c.EndDate,
-                Amount = c.Amount,
+                FinalAmount = c.FinalAmount,
                 RemainingAmount = c.RemainingAmount,
                 Status = c.Status
             }).ToListAsync(cancellationToken);

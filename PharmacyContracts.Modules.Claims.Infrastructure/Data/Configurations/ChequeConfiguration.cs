@@ -15,14 +15,13 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
             builder.Property(c => c.DepartmentName).HasMaxLength(200);
             builder.Property(c => c.ChequeNumber).HasMaxLength(50);
             builder.Property(c => c.BankName).HasMaxLength(200);
-            builder.Property(c => c.Amount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.AmountBeforeDiscount).HasColumnType("decimal(18,2)");
-            builder.Property(c => c.AmountAfterDiscount).HasColumnType("decimal(18,2)");
-            builder.Property(c => c.DiscountDifference).HasColumnType("decimal(18,2)");
+            builder.Property(c => c.CorrectAmount).HasColumnType("decimal(18,2)");
+            builder.Property(c => c.AmountDifference).HasColumnType("decimal(18,2)");
             builder.Property(c => c.TaxPercentage).HasColumnType("decimal(5,2)");
             builder.Property(c => c.AdministrativeExpensesPercentage).HasColumnType("decimal(5,2)");
             builder.Property(c => c.FinalAmount).HasColumnType("decimal(18,2)");
-            builder.Property(c => c.PaidAmount).HasColumnType("decimal(18,2)");
+            builder.Property(c => c.ActualAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.PaymentDifference).HasColumnType("decimal(18,2)");
             builder.Property(c => c.PaymentDifferenceType).HasConversion<string>().HasMaxLength(20);
             builder.Property(c => c.RemainingAmount).HasColumnType("decimal(18,2)");

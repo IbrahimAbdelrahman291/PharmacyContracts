@@ -5,10 +5,9 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
     {
         public Guid ClaimId { get; set; }
         public string CompanyName { get; set; } = string.Empty;
-        public decimal Amount { get; set; }           // Claim.CorrectedAmount
         public decimal AmountBeforeDiscount { get; set; }
-        public decimal AmountAfterDiscount { get; set; }
-        public decimal DiscountDifference { get; set; }
+        public decimal CorrectAmount { get; set; }
+        public decimal AmountDifference { get; set; }
         public decimal TaxPercentage { get; set; }
         public decimal AdministrativeExpensesPercentage { get; set; }
         public decimal FinalAmount { get; set; }

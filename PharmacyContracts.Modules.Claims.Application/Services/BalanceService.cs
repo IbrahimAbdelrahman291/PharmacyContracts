@@ -68,7 +68,7 @@ public class BalanceService : IBalanceService
         {
             var outstanding = cheque.Status == ChequeStatus.PartiallyPaid
                 ? cheque.RemainingAmount ?? 0m
-                : cheque.Amount;
+                : cheque.FinalAmount;
 
             if (cheque.EndDate.Date >= today)
                 response.NotYetDue += outstanding;
