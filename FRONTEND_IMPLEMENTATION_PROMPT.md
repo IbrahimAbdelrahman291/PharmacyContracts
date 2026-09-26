@@ -50,7 +50,7 @@ Connect it to these five reports:
 
 - Upcoming: `GET /api/v1/cheques/upcoming-due?days={days}&month={month}&year={year}`
 - Total balance: `GET /api/v1/claims/reports/total-balance?month={month}&year={year}`
-- Company balance: `GET /api/v1/claims/reports/company-balance?companyName={name}&month={month}&year={year}`
+- Company balance: `GET /api/v1/claims/reports/company-balance?companyName={optionalName}&month={month}&year={year}`
 - Aging: `GET /api/v1/claims/reports/aging?companyName={optionalName}&month={month}&year={year}`
 - Debtors: `GET /api/v1/claims/reports/top-debtors?top={count}&month={month}&year={year}`
 
@@ -60,7 +60,7 @@ Expected report responses:
 
 - Upcoming: array of cheque objects using the revised cheque contract in section 4, including `id`, `companyName`, `finalAmount`, `endDate`, `status`, and receipt fields.
 - Total balance: `{ totalClaimed, totalCollected, balance }`.
-- Company balance: `{ companyName, totalClaimed, totalCollected, balance }`.
+- Company balance: `{ companyName, totalClaimed, totalCollected, balance }`. Omit `companyName` by default to load the aggregate for all companies; the response then uses `"All Companies"` as `companyName`. Sending a company name keeps the existing company-specific result.
 - Aging: `{ notYetDue, overdue0To30, overdue31To60, overdue60Plus, totalOutstanding }`.
 - Debtors: array of company-balance objects, ordered by descending balance.
 

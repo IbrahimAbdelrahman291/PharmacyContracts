@@ -6,6 +6,8 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
 {
     public class CompanyProfileRecordDto
     {
+        public string Status { get; set; } = string.Empty;
+        public string CustomerCompanyName { get; set; } = string.Empty;
         public DateTime SaleDate { get; set; }
         public decimal ImportedItemsTotal { get; set; }
         public decimal LocalItemsTotal { get; set; }
@@ -14,5 +16,6 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public decimal DiscountOnItems { get; set; }
         public decimal SubTotal { get; set; }
         public decimal RemainingAmount { get; set; }
+        public string BranchName { get; set; } = string.Empty;
     }
 }

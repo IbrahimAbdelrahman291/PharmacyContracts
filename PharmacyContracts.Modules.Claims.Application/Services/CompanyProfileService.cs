@@ -24,6 +24,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             {
                 Items = paged.Items.Select(r => new CompanyProfileRecordDto
                 {
+                    Status = r.Status,
+                    CustomerCompanyName = r.CustomerCompanyName,
                     SaleDate = r.SaleDate,
                     ImportedItemsTotal = r.ImportedItemsTotal,
                     LocalItemsTotal = r.LocalItemsTotal,
@@ -31,7 +33,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     DiscountOnTotal = r.DiscountOnTotal,
                     DiscountOnItems = r.DiscountOnItems,
                     SubTotal = r.SubTotal,
-                    RemainingAmount = r.RemainingAmount
+                    RemainingAmount = r.RemainingAmount,
+                    BranchName = r.BranchName
                 }).ToList(),
                 PageNumber = paged.PageNumber,
                 PageSize = paged.PageSize,

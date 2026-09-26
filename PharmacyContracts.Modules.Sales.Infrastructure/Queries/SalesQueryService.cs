@@ -58,6 +58,8 @@ public class SalesQueryService : ISalesQueryService
             .Take(pagination.PageSize)
             .Select(r => new SalesRecordProfileContract
             {
+                Status = r.Status.ToString(),
+                CustomerCompanyName = r.CustomerCompanyName,
                 SaleDate = r.SaleDate,
                 ImportedItemsTotal = r.ImportedItemsTotal,
                 LocalItemsTotal = r.LocalItemsTotal,
@@ -65,7 +67,8 @@ public class SalesQueryService : ISalesQueryService
                 DiscountOnTotal = r.DiscountOnTotal,
                 DiscountOnItems = r.DiscountOnItems,
                 SubTotal = r.SubTotal,
-                RemainingAmount = r.RemainingAmount
+                RemainingAmount = r.RemainingAmount,
+                BranchName = r.BranchName
             })
             .ToListAsync(cancellationToken);
 

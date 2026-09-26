@@ -21,7 +21,7 @@ public class ClaimsReportsController : ControllerBase
 
     [HttpGet("company-balance")]
     public async Task<IActionResult> GetCompanyBalance(
-        [FromQuery] string companyName,
+        [FromQuery] string? companyName,
         [FromQuery] int? month,
         [FromQuery] int? year,
         CancellationToken cancellationToken)

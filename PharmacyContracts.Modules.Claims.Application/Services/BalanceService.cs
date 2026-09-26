@@ -17,20 +17,19 @@ public class BalanceService : IBalanceService
     }
 
     public async Task<Result<CompanyBalanceResponseDto>> GetCompanyBalanceAsync(
-        Guid pharmacyId, string companyName, int? month, int? year, CancellationToken cancellationToken = default)
+        Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(companyName))
-            return Result<CompanyBalanceResponseDto>.Failure("اسم الشركة مطلوب.");
-
         var periodValidation = ValidatePeriod(month, year);
         if (!periodValidation.Succeeded)
             return Result<CompanyBalanceResponseDto>.Failure(periodValidation.Errors);
 
-        var normalizedCompanyName = companyName.Trim();
+        // No company filter means the balance for every company in the pharmacy.
+        var normalizedCompanyName = string.IsNullOrWhiteSpace(companyName) ? null : companyName.Trim();
         var totalClaimed = await _claimRepository.GetTotalClaimedAsync(pharmacyId, normalizedCompanyName, month, year, cancellationToken);
         var totalCollected = await _chequeRepository.GetTotalCollectedAsync(pharmacyId, normalizedCompanyName, month, year, cancellationToken);
 
-        return Result<CompanyBalanceResponseDto>.Success(CreateCompanyBalance(normalizedCompanyName, totalClaimed, totalCollected));
+        return Result<CompanyBalanceResponseDto>.Success(CreateCompanyBalance(
+            normalizedCompanyName ?? "All Companies", totalClaimed, totalCollected));
     }
 
     public async Task<Result<TotalBalanceResponseDto>> GetTotalBalanceAsync(
