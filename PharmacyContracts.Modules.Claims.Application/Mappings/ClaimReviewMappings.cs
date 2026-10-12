@@ -7,7 +7,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
     {
         public static ClaimReviewResponseDto ToResponseDto(this ClaimReview review, Claim claim)
         {
-            var correctedAmount = review.CorrectedAmount ?? claim.ClaimAmount;
+            var correctedAmount = review.CorrectedAmount ?? claim.SubTotal;
             var correctedPrescriptionsCount = review.CorrectedPrescriptionsCount ?? claim.PrescriptionsCount;
 
             return new ClaimReviewResponseDto
@@ -18,9 +18,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 IsAccurate = review.IsAccurate,
                 CorrectedAmount = review.CorrectedAmount,
                 CorrectedPrescriptionsCount = review.CorrectedPrescriptionsCount,
-                AmountBeforeDiscount = claim.ClaimAmount,
-                AmountDifference = Math.Abs(correctedAmount - claim.ClaimAmount),
-                AmountDifferenceType = GetDifferenceType(correctedAmount, claim.ClaimAmount),
+                AmountBeforeDiscount = claim.SubTotal,
+                AmountDifference = Math.Abs(correctedAmount - claim.SubTotal),
+                AmountDifferenceType = GetDifferenceType(correctedAmount, claim.SubTotal),
                 PrescriptionsCount = claim.PrescriptionsCount,
                 PrescriptionsCountDifference = Math.Abs(correctedPrescriptionsCount - claim.PrescriptionsCount),
                 PrescriptionsCountDifferenceType = GetDifferenceType(correctedPrescriptionsCount, claim.PrescriptionsCount),

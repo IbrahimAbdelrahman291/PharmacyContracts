@@ -39,7 +39,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             var companyTotals = totals
                 .GroupBy(t => t.CompanyName)
-                .Select(g => new { CompanyName = g.Key, Total = g.Sum(t => t.TotalRemainingAmount) })
+                .Select(g => new
+                {
+                    CompanyName = g.Key,
+                    Total = g.Sum(t => t.TotalRemainingAmount),
+                    SubTotal = g.Sum(t => t.TotalSubTotal)
+                })
                 .ToList();
 
             var companyNames = companyTotals.Select(c => c.CompanyName).ToList();
@@ -65,6 +70,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     Month = month,
                     Year = year,
                     ClaimAmount = insights.TotalRemainingAmount,
+                    SubTotal = companyTotal.SubTotal,
                     ClaimAmountAfterDiscount = afterDiscount,
                     PrescriptionsCount = insights.PrescriptionsCount,
                     Status = ClaimStatus.Pending

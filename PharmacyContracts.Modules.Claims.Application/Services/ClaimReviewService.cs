@@ -192,10 +192,10 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (correctedPrescriptionsCount.Value < 0)
                 return Result.Failure("لا يمكن أن يكون العدد الصحيح للوصفات أقل من صفر.");
 
-            differenceAmount = Math.Abs(correctedAmount.Value - claim.ClaimAmount);
-            differenceType = correctedAmount.Value > claim.ClaimAmount
+            differenceAmount = Math.Abs(correctedAmount.Value - claim.SubTotal);
+            differenceType = correctedAmount.Value > claim.SubTotal
                 ? DifferenceType.Increase
-                : correctedAmount.Value < claim.ClaimAmount
+                : correctedAmount.Value < claim.SubTotal
                     ? DifferenceType.Decrease
                     : DifferenceType.NoDifference;
 

@@ -7,5 +7,6 @@ namespace PharmacyContracts.SharedKernel.Contracts
         public string CompanyName { get; set; } = string.Empty;
         public string BranchName { get; set; } = string.Empty;
         public decimal TotalRemainingAmount { get; set; }
+        public decimal TotalSubTotal { get; set; }
     }
 }

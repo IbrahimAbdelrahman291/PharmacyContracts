@@ -48,7 +48,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (financialPercentages is null)
                 return Result<ChequeCreationPreparationDto>.Failure("الشركة غير موجودة أو لا تحتوي على إعدادات مالية.");
 
-            var amountBeforeDiscount = RoundMoney(claim.ClaimAmount);
+            var amountBeforeDiscount = RoundMoney(claim.SubTotal);
             var correctAmount = RoundMoney(claim.CorrectedAmount.Value);
 
             return Result<ChequeCreationPreparationDto>.Success(new ChequeCreationPreparationDto
@@ -151,8 +151,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 var isLast = index == request.Allocations.Count - 1;
                 var ratio = allocation.Amount / allocationsSum;
                 var amountBeforeDiscount = isLast
-                    ? RoundMoney(claim.ClaimAmount - allocatedBeforeDiscount)
-                    : RoundMoney(claim.ClaimAmount * ratio);
+                    ? RoundMoney(claim.SubTotal - allocatedBeforeDiscount)
+                    : RoundMoney(claim.SubTotal * ratio);
                 var correctAmount = RoundMoney(allocation.Amount);
 
                 allocatedBeforeDiscount += amountBeforeDiscount;

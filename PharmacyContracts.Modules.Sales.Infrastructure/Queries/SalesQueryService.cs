@@ -32,7 +32,8 @@ public class SalesQueryService : ISalesQueryService
             {
                 CompanyName = g.Key.CustomerCompanyName,
                 BranchName = g.Key.BranchName,
-                TotalRemainingAmount = g.Sum(r => r.RemainingAmount)
+                TotalRemainingAmount = g.Sum(r => r.RemainingAmount),
+                TotalSubTotal = g.Sum(r => r.SubTotal)
             })
             .ToListAsync(cancellationToken);
     }

@@ -14,6 +14,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 Month = claim.Month,
                 Year = claim.Year,
                 ClaimAmount = claim.ClaimAmount,
+                SubTotal = claim.SubTotal,
                 ClaimAmountAfterDiscount = claim.ClaimAmountAfterDiscount,
                 PrescriptionsCount = claim.PrescriptionsCount,
                 CorrectedAmount = claim.CorrectedAmount,

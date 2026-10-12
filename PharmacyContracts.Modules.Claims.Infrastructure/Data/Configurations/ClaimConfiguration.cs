@@ -13,6 +13,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
 
             builder.Property(c => c.CompanyName).IsRequired().HasMaxLength(200);
             builder.Property(c => c.ClaimAmount).HasColumnType("decimal(18,2)");
+            builder.Property(c => c.SubTotal).HasColumnType("decimal(18,2)");
             builder.Property(c => c.ClaimAmountAfterDiscount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.CorrectedAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(30);
