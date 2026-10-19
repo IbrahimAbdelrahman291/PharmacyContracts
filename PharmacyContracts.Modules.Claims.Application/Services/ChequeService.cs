@@ -27,8 +27,10 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         public async Task<Result<ChequeCreationPreparationDto>> PrepareAsync(
             Guid pharmacyId, string companyName, int month, int year, CancellationToken cancellationToken = default)
         {
+            companyName = companyName.Trim();
             var claims = await _claimRepository.GetByPeriodAsync(pharmacyId, month, year, cancellationToken);
-            var claim = claims.FirstOrDefault(c => c.CompanyName == companyName);
+            var claim = claims.FirstOrDefault(c =>
+                string.Equals(c.CompanyName.Trim(), companyName, StringComparison.OrdinalIgnoreCase));
 
             if (claim is null)
                 return Result<ChequeCreationPreparationDto>.Failure("لا توجد مطالبة لهذه الشركة في هذا الشهر.");
@@ -46,7 +48,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 pharmacyId, companyName, cancellationToken);
 
             if (financialPercentages is null)
-                return Result<ChequeCreationPreparationDto>.Failure("الشركة غير موجودة أو لا تحتوي على إعدادات مالية.");
+                return Result<ChequeCreationPreparationDto>.Failure(
+                    $"الشركة '{claim.CompanyName}' غير مسجلة لهذه الصيدلية. أضف الشركة وأكمل إعداداتها المالية ثم أعد المحاولة.");
 
             var amountBeforeDiscount = RoundMoney(claim.SubTotal);
             var correctAmount = RoundMoney(claim.CorrectedAmount.Value);
@@ -139,7 +142,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 pharmacyId, claim.CompanyName, cancellationToken);
 
             if (financialPercentages is null)
-                return Result<List<ChequeResponseDto>>.Failure("الشركة غير موجودة أو لا تحتوي على إعدادات مالية.");
+                return Result<List<ChequeResponseDto>>.Failure(
+                    $"الشركة '{claim.CompanyName}' غير مسجلة لهذه الصيدلية. أضف الشركة وأكمل إعداداتها المالية ثم أعد المحاولة.");
 
             var endDate = request.StartDate.AddDays(settlementDays);
             var cheques = new List<Cheque>(request.Allocations.Count);

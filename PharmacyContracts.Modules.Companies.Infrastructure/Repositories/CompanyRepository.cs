@@ -39,7 +39,12 @@ public class CompanyRepository : ICompanyRepository
     }
 
     public Task<bool> ExistsByNameAsync(Guid pharmacyId, string name, CancellationToken cancellationToken = default)
-        => _context.Companies.AnyAsync(c => c.PharmacyId == pharmacyId && c.Name == name, cancellationToken);
+    {
+        var normalizedName = name.Trim();
+        return _context.Companies.AnyAsync(
+            c => c.PharmacyId == pharmacyId && c.Name.Trim() == normalizedName,
+            cancellationToken);
+    }
 
     public async Task AddAsync(Company entity, CancellationToken cancellationToken = default)
         => await _context.Companies.AddAsync(entity, cancellationToken);

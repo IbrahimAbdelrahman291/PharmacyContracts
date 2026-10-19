@@ -13,8 +13,9 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
 
         public async Task<decimal> GetDiscountPercentageAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
         {
+            var normalizedName = companyName.Trim();
             var company = await _context.Companies
-                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name == companyName, cancellationToken);
+                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name.Trim() == normalizedName, cancellationToken);
 
             return company?.Discount ?? 0;
         }
@@ -22,8 +23,9 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
         // الميثود الناقصة - أضفناها هنا
         public async Task<int> GetChequeSettlementPeriodInDaysAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
         {
+            var normalizedName = companyName.Trim();
             var company = await _context.Companies
-                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name == companyName, cancellationToken);
+                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name.Trim() == normalizedName, cancellationToken);
 
             return company?.ChequeSettlementPeriodInDays ?? 45; // قيمة افتراضية لو الشركة مش موجودة بنفس الاسم بالظبط
         }
@@ -32,21 +34,22 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
             Guid pharmacyId, IEnumerable<string> companyNames, CancellationToken cancellationToken = default)
         {
             var namesList = companyNames.Distinct().ToList();
+            var normalizedNames = namesList.Select(name => name.Trim()).Distinct().ToList();
 
             if (namesList.Count == 0)
                 return new Dictionary<string, decimal>();
 
             var companies = await _context.Companies
-                .Where(c => c.PharmacyId == pharmacyId && namesList.Contains(c.Name))
+                .Where(c => c.PharmacyId == pharmacyId && normalizedNames.Contains(c.Name.Trim()))
                 .Select(c => new { c.Name, c.Discount })
                 .ToListAsync(cancellationToken);
 
-            var result = companies.ToDictionary(c => c.Name, c => c.Discount);
-
-            foreach (var name in namesList)
-            {
-                result.TryAdd(name, 0);
-            }
+            var discountsByNormalizedName = companies
+                .GroupBy(c => c.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First().Discount, StringComparer.OrdinalIgnoreCase);
+            var result = namesList.ToDictionary(
+                name => name,
+                name => discountsByNormalizedName.GetValueOrDefault(name.Trim()));
 
             return result;
         }
@@ -55,12 +58,13 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
             Guid pharmacyId, IEnumerable<string> companyNames, CancellationToken cancellationToken = default)
         {
             var namesList = companyNames.Distinct().ToList();
+            var normalizedNames = namesList.Select(name => name.Trim()).Distinct().ToList();
 
             if (namesList.Count == 0)
                 return new Dictionary<string, CompanyDiscountPercentagesContract>();
 
             var companies = await _context.Companies
-                .Where(c => c.PharmacyId == pharmacyId && namesList.Contains(c.Name))
+                .Where(c => c.PharmacyId == pharmacyId && normalizedNames.Contains(c.Name.Trim()))
                 .Select(c => new
                 {
                     c.Name,
@@ -69,25 +73,29 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
                 })
                 .ToListAsync(cancellationToken);
 
-            var result = companies.ToDictionary(
-                c => c.Name,
-                c => new CompanyDiscountPercentagesContract
+            var discountsByNormalizedName = companies
+                .GroupBy(c => c.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                group => group.Key,
+                group => new CompanyDiscountPercentagesContract
                 {
-                    LocalDiscountPercentage = c.LocalDiscountPercentage,
-                    ImportedDiscountPercentage = c.ImportedDiscountPercentage
-                });
+                    LocalDiscountPercentage = group.First().LocalDiscountPercentage,
+                    ImportedDiscountPercentage = group.First().ImportedDiscountPercentage
+                },
+                StringComparer.OrdinalIgnoreCase);
 
-            foreach (var name in namesList)
-            {
-                result.TryAdd(name, new CompanyDiscountPercentagesContract());
-            }
+            var result = namesList.ToDictionary(
+                name => name,
+                name => discountsByNormalizedName.GetValueOrDefault(name.Trim())
+                    ?? new CompanyDiscountPercentagesContract());
 
             return result;
         }
         public async Task<List<string>> GetDepartmentNamesAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
         {
+            var normalizedName = companyName.Trim();
             var company = await _context.Companies
-                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name == companyName, cancellationToken);
+                .FirstOrDefaultAsync(c => c.PharmacyId == pharmacyId && c.Name.Trim() == normalizedName, cancellationToken);
 
             if (company is null)
                 return new List<string>();
@@ -102,14 +110,39 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
         public async Task<CompanyFinancialPercentagesContract?> GetFinancialPercentagesAsync(
             Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
         {
+            var normalizedName = companyName.Trim();
             return await _context.Companies
-                .Where(c => c.PharmacyId == pharmacyId && c.Name == companyName)
+                .Where(c => c.PharmacyId == pharmacyId && c.Name.Trim() == normalizedName)
                 .Select(c => new CompanyFinancialPercentagesContract
                 {
                     TaxPercentage = c.TaxPercentage,
                     AdministrativeExpensesPercentage = c.AdministrativeExpensesPercentage
                 })
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<List<string>> GetMissingCompanyNamesAsync(
+            Guid pharmacyId, IEnumerable<string> companyNames, CancellationToken cancellationToken = default)
+        {
+            var requestedNames = companyNames
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (requestedNames.Count == 0)
+                return [];
+
+            var registeredNames = await _context.Companies
+                .Where(c => c.PharmacyId == pharmacyId && requestedNames.Contains(c.Name.Trim()))
+                .Select(c => c.Name)
+                .ToListAsync(cancellationToken);
+
+            var registeredSet = registeredNames
+                .Select(name => name.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return requestedNames.Where(name => !registeredSet.Contains(name)).ToList();
         }
     }
 }

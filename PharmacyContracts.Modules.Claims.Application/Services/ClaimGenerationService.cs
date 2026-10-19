@@ -48,6 +48,15 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 .ToList();
 
             var companyNames = companyTotals.Select(c => c.CompanyName).ToList();
+            var missingCompanyNames = await _companiesQueryService.GetMissingCompanyNamesAsync(
+                pharmacyId, companyNames, cancellationToken);
+
+            if (missingCompanyNames.Count > 0)
+            {
+                return Result<List<ClaimResponseDto>>.Failure(
+                    $"يجب تسجيل الشركات التالية وإكمال إعداداتها المالية قبل استخراج المطالبات: {string.Join("، ", missingCompanyNames)}.");
+            }
+
             var totalDiscountByCompany = await _companiesQueryService.GetDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
             var discountByCompany = await _companiesQueryService.GetItemDiscountPercentagesAsync(pharmacyId, companyNames, cancellationToken);
             var claims = new List<Claim>();

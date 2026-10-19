@@ -25,7 +25,7 @@ public static class CompanyMappings
     {
         return new Company
         {
-            Name = dto.Name,
+            Name = dto.Name.Trim(),
             LocalDiscountPercentage = dto.LocalDiscountPercentage,
             ImportedDiscountPercentage = dto.ImportedDiscountPercentage,
             TaxPercentage = dto.TaxPercentage,
@@ -38,7 +38,7 @@ public static class CompanyMappings
 
     public static void ApplyUpdate(this Company company, UpdateCompanyRequestDto dto)
     {
-        company.Name = dto.Name;
+        company.Name = dto.Name.Trim();
         company.LocalDiscountPercentage = dto.LocalDiscountPercentage;
         company.ImportedDiscountPercentage = dto.ImportedDiscountPercentage;
         company.TaxPercentage = dto.TaxPercentage;
