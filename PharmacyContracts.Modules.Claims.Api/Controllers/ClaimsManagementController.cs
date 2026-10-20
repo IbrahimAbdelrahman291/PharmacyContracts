@@ -76,7 +76,7 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
         }
 
         [HttpPut("{id:guid}/reviews")]
-        [Authorize(Roles = "Pharmacy")]
+        [Authorize(Roles = "Pharmacy,ClaimsReviewer")]
         public async Task<IActionResult> UpdateReview(Guid id, [FromBody] UpdateClaimReviewRequestDto request, CancellationToken cancellationToken)
         {
             var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
