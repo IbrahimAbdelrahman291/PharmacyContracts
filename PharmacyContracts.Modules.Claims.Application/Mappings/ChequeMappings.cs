@@ -23,6 +23,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                 ActualAmount = cheque.ActualAmount,
                 PaymentDifference = cheque.PaymentDifference,
                 PaymentDifferenceType = cheque.PaymentDifferenceType?.ToString(),
+                ReturnToReviewerReason = cheque.ReturnToReviewerReason,
                 ChequeDate = cheque.ChequeDate,
                 ClaimMonth = cheque.ClaimMonth,
                 ClaimYear = cheque.ClaimYear,

@@ -38,7 +38,7 @@ public partial class Program
             .AddApplicationPart(typeof(CompaniesController).Assembly)
             .AddApplicationPart(typeof(SalesBatchesController).Assembly)
             .AddApplicationPart(typeof(ClaimsController).Assembly)
-            .AddApplicationPart(typeof(ClaimsManagementController).Assembly)    
+            .AddApplicationPart(typeof(ClaimsManagementController).Assembly)
             .AddApplicationPart(typeof(ChequesController).Assembly);
         // Swagger
         builder.Services.AddEndpointsApiExplorer();
@@ -73,7 +73,7 @@ public partial class Program
         builder.Services.AddSalesApplication();
 
         // Claims Module
-        builder.Services.AddClaimsInfrastructure(builder.Configuration);
+        builder.Services.AddClaimsInfrastructure(builder.Configuration, builder.Environment.WebRootPath);
         builder.Services.AddClaimsApplication();
 
         // Hangfire
@@ -141,7 +141,8 @@ public partial class Program
         // (لازم يكون قبل UseStaticFiles، عشان يمنع الـ request قبل ما يوصل للـ middleware اللي بيقدم الملفات)
         app.Use(async (context, next) =>
         {
-            if (context.Request.Path.StartsWithSegments("/pending-uploads"))
+            if (context.Request.Path.StartsWithSegments("/pending-uploads") ||
+                context.Request.Path.StartsWithSegments("/digital-receipts"))
             {
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return;
@@ -172,6 +173,10 @@ public partial class Program
             "cheque-overdue-sweep",
             job => job.ExecuteAsync(CancellationToken.None),
             Cron.Daily());   // كل يوم الساعة 12 بالليل (UTC)
+        RecurringJob.AddOrUpdate<DigitalReceiptExpirationJob>(
+            "digital-receipt-expiration",
+            job => job.ExecuteAsync(CancellationToken.None),
+            Cron.Hourly());
         app.Run();
     }
 }

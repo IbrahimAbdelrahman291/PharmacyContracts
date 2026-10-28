@@ -8,6 +8,8 @@ namespace PharmacyContracts.Modules.Claims.Domain.Enums
         PaidInFull = 2,
         PartiallyPaid = 3,
         Deferred = 4,
-        Overdue = 5
+        Overdue = 5,
+        CorporateInsolvencies = 6,
+        ReturnedToReviewer = 7
     }
 }

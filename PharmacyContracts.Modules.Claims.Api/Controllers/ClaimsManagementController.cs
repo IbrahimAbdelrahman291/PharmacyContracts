@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PharmacyContracts.Modules.Claims.Application.DTOs;
 using PharmacyContracts.Modules.Claims.Application.Interfaces;
 using PharmacyContracts.SharedKernel.Interfaces;
+using PharmacyContracts.SharedKernel.Wrappers;
 
 namespace PharmacyContracts.Modules.Claims.Api.Controllers
 {
@@ -111,6 +112,20 @@ namespace PharmacyContracts.Modules.Claims.Api.Controllers
             if (!result.Succeeded)
                 return NotFound(new { errors = result.Errors });
 
+            return Ok(result.Data);
+        }
+
+        [HttpGet("review-differences/report")]
+        [Authorize(Roles = "ClaimsReviewer")]
+        public async Task<IActionResult> GetReviewDifferenceReport(
+            [FromQuery] string? companyName,
+            [FromQuery] PaginationParams pagination,
+            CancellationToken cancellationToken)
+        {
+            if (_currentUserService.EffectivePharmacyId is not Guid pharmacyId)
+                return Forbid();
+
+            var result = await _claimReviewService.GetDifferenceReportAsync(pharmacyId, companyName, pagination, cancellationToken);
             return Ok(result.Data);
         }
     }

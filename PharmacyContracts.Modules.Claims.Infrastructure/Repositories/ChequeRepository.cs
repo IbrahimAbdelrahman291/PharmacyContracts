@@ -49,7 +49,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
 
             if (!string.IsNullOrWhiteSpace(companyName))
-                query = query.Where(c => c.CompanyName == companyName);
+            {
+                var normalizedCompanyName = companyName.Trim();
+                query = query.Where(c => c.CompanyName == normalizedCompanyName);
+            }
 
             if (month.HasValue)
                 query = query.Where(c => c.ClaimMonth == month.Value);

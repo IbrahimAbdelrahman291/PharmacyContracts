@@ -10,5 +10,6 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public DateTime? ChequeDate { get; set; }
         public string? ChequeNumber { get; set; }
         public string? BankName { get; set; }
+        public string? ReturnToReviewerReason { get; set; }
     }
 }

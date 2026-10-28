@@ -8,6 +8,7 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
     {
         public string? DepartmentName { get; set; }   // null لو مفيش تقسيم إدارات
         public decimal Amount { get; set; }
+        public decimal AdministrativeExpensesPercentage { get; set; }
 
         public string? ChequeNumber { get; set; }
         public string? BankName { get; set; }

@@ -32,6 +32,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Mappings
                     Value = d.Value,
                     Reason = d.Reason.ToString(),
                     Notes = d.Notes,
+                    EmployeeName = d.EmployeeName,
+                    PharmacyName = d.PharmacyName,
                     ReviewId = d.ReviewId,
                     PharmacyId = d.PharmacyId
                 }).ToList(),

@@ -52,6 +52,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     Value = d.Value,
                     Reason = d.Reason,
                     Notes = d.Notes,
+                    EmployeeName = d.EmployeeName,
+                    PharmacyName = d.PharmacyName,
                     PharmacyId = pharmacyId
                 }).ToList()
             };
@@ -103,7 +105,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     PharmacyId = pharmacyId,
                     Value = difference.Value,
                     Reason = difference.Reason,
-                    Notes = difference.Notes
+                    Notes = difference.Notes,
+                    EmployeeName = difference.EmployeeName,
+                    PharmacyName = difference.PharmacyName
                 });
             }
 
@@ -164,10 +168,15 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             });
         }
 
+        public async Task<Result<PagedResult<ClaimReviewDifferenceReportDto>>> GetDifferenceReportAsync(
+            Guid pharmacyId, string? companyName, PaginationParams pagination, CancellationToken cancellationToken = default)
+            => Result<PagedResult<ClaimReviewDifferenceReportDto>>.Success(
+                await _claimReviewRepository.GetContractualDeductionReportAsync(pharmacyId, companyName, pagination, cancellationToken));
+
         private static Result ValidateReviewInput(Claim claim, bool isAccurate, decimal? correctedAmount,
             int? correctedPrescriptionsCount, IReadOnlyCollection<ClaimReviewDifferenceRequestDto>? differences,
             out decimal differenceAmount, out DifferenceType differenceType,
-            out List<(decimal Value, DifferenceReason Reason, string? Notes)> parsedDifferences)
+            out List<(decimal Value, DifferenceReason Reason, string? Notes, string? EmployeeName, string? PharmacyName)> parsedDifferences)
         {
             differenceAmount = 0;
             differenceType = DifferenceType.NoDifference;
@@ -209,7 +218,14 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                     || !Enum.IsDefined(reason))
                     return Result.Failure($"سبب الفرق '{difference.Reason}' غير صالح.");
 
-                parsedDifferences.Add((difference.Value, reason, difference.Notes));
+                var employeeName = string.IsNullOrWhiteSpace(difference.EmployeeName) ? null : difference.EmployeeName.Trim();
+                var pharmacyName = string.IsNullOrWhiteSpace(difference.PharmacyName) ? null : difference.PharmacyName.Trim();
+                if (reason == DifferenceReason.ContractualDeduction && employeeName is null)
+                    return Result.Failure("EmployeeName is required for ContractualDeduction.");
+                if ((reason == DifferenceReason.ContractualDeduction || reason == DifferenceReason.DeferredToNextMonth) && pharmacyName is null)
+                    return Result.Failure("PharmacyName is required for ContractualDeduction and DeferredToNextMonth.");
+
+                parsedDifferences.Add((difference.Value, reason, difference.Notes, employeeName, pharmacyName));
             }
 
             if (parsedDifferences.Sum(d => d.Value) < differenceAmount)

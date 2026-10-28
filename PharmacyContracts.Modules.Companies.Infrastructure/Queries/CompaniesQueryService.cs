@@ -11,6 +11,12 @@ namespace PharmacyContracts.Modules.Companies.Infrastructure.Queries
         private readonly CompaniesDbContext _context;
         public CompaniesQueryService(CompaniesDbContext context) => _context = context;
 
+        public Task<string?> GetCompanyNameByIdAsync(Guid pharmacyId, Guid companyId, CancellationToken cancellationToken = default)
+            => _context.Companies
+                .Where(c => c.PharmacyId == pharmacyId && c.Id == companyId)
+                .Select(c => c.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+
         public async Task<decimal> GetDiscountPercentageAsync(Guid pharmacyId, string companyName, CancellationToken cancellationToken = default)
         {
             var normalizedName = companyName.Trim();

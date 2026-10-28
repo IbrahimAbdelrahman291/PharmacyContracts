@@ -19,13 +19,14 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
             builder.Property(c => c.CorrectAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.AmountDifference).HasColumnType("decimal(18,2)");
             builder.Property(c => c.TaxPercentage).HasColumnType("decimal(5,2)");
-            builder.Property(c => c.AdministrativeExpensesPercentage).HasColumnType("decimal(5,2)");
+            builder.Property(c => c.AdministrativeExpensesPercentage).HasColumnType("decimal(18,2)");
             builder.Property(c => c.FinalAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.ActualAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.PaymentDifference).HasColumnType("decimal(18,2)");
             builder.Property(c => c.PaymentDifferenceType).HasConversion<string>().HasMaxLength(20);
+            builder.Property(c => c.ReturnToReviewerReason).HasMaxLength(1000);
             builder.Property(c => c.RemainingAmount).HasColumnType("decimal(18,2)");
-            builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
+            builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(30);
 
             builder.HasIndex(c => c.ClaimId);
             builder.HasIndex(c => new { c.PharmacyId, c.ChequeNumber })

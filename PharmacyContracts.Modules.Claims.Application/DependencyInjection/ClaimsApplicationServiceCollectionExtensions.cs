@@ -18,6 +18,8 @@ namespace PharmacyContracts.Modules.Claims.Application.DependencyInjection
             services.AddScoped<IClaimReviewService, ClaimReviewService>();
             services.AddScoped<IChequeService, ChequeService>();
             services.AddScoped<IBalanceService, BalanceService>();
+            services.AddScoped<IDigitalReceiptService, DigitalReceiptService>();
+            services.AddScoped<ICosmeticsLedgerService, CosmeticsLedgerService>();
 
             return services;
         }

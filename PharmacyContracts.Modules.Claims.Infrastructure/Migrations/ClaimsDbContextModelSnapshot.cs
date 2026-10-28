@@ -32,7 +32,7 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("AdministrativeExpensesPercentage")
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("AmountBeforeDiscount")
                         .HasColumnType("decimal(18,2)");
@@ -97,6 +97,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.Property<decimal?>("RemainingAmount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("ReturnToReviewerReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("SettlementDays")
                         .HasColumnType("int");
 
@@ -105,8 +109,8 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<decimal>("TaxPercentage")
                         .HasColumnType("decimal(5,2)");
@@ -255,6 +259,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("EmployeeName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -264,6 +272,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
 
                     b.Property<Guid>("PharmacyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PharmacyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -288,6 +300,187 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.ToTable("ClaimReviewDifferences", "claims");
                 });
 
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsCompany", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PharmacyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PharmacyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("CosmeticsCompanies", "claims");
+                });
+
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsName", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PharmacyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PharmacyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("CosmeticsNames", "claims");
+                });
+
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsNegative")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("NameId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("PharmacyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("NameId");
+
+                    b.HasIndex("PharmacyId", "CompanyId", "Date");
+
+                    b.HasIndex("PharmacyId", "NameId", "Date");
+
+                    b.ToTable("CosmeticsTransactions", "claims");
+                });
+
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.DigitalReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("PharmacyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status", "ExpiresAt");
+
+                    b.HasIndex("PharmacyId", "CompanyId", "Month", "Year")
+                        .IsUnique();
+
+                    b.ToTable("DigitalReceipts", "claims");
+                });
+
             modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.ClaimReviewDifference", b =>
                 {
                     b.HasOne("PharmacyContracts.Modules.Claims.Domain.Entities.ClaimReview", "Review")
@@ -299,9 +492,38 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.Navigation("Review");
                 });
 
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsTransaction", b =>
+                {
+                    b.HasOne("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsCompany", "Company")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsName", "Name")
+                        .WithMany("Transactions")
+                        .HasForeignKey("NameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Name");
+                });
+
             modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.ClaimReview", b =>
                 {
                     b.Navigation("Differences");
+                });
+
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsCompany", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("PharmacyContracts.Modules.Claims.Domain.Entities.CosmeticsName", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }
