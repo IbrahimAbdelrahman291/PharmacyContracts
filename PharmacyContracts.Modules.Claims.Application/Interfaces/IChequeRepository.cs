@@ -8,7 +8,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Interfaces
     public interface IChequeRepository : IGenericRepository<Cheque>
     {
         Task<bool> ExistsForClaimAsync(Guid claimId, CancellationToken cancellationToken = default);
-        Task<bool> ExistsByChequeNumberAsync(Guid pharmacyId, string chequeNumber, Guid? excludedChequeId = null, CancellationToken cancellationToken = default);
         Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? month, int? year, ChequeStatus? status, CancellationToken cancellationToken = default);
         Task<decimal> GetTotalCollectedAsync(Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default);
         Task<List<UnpaidChequeBalanceDto>> GetUnpaidOrPartiallyPaidChequesAsync(Guid pharmacyId, string? companyName, int? month, int? year, CancellationToken cancellationToken = default);

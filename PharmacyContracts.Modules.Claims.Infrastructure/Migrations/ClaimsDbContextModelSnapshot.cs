@@ -123,7 +123,6 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.HasIndex("ClaimId");
 
                     b.HasIndex("PharmacyId", "ChequeNumber")
-                        .IsUnique()
                         .HasFilter("[ChequeNumber] IS NOT NULL");
 
                     b.HasIndex("PharmacyId", "Status", "EndDate");

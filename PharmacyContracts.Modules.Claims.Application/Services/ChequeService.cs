@@ -94,18 +94,9 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 .Select(number => number!)
                 .ToList();
 
-            if (chequeNumbers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != chequeNumbers.Count)
-                return Result<List<ChequeResponseDto>>.Failure("لا يمكن تكرار رقم الشيك في نفس الطلب.");
-
             if (chequeNumbers.Any(number => number.Length > 50) ||
                 request.Allocations.Any(a => a.BankName?.Trim().Length > 200))
                 return Result<List<ChequeResponseDto>>.Failure("رقم الشيك أو اسم البنك أطول من الحد المسموح.");
-
-            foreach (var chequeNumber in chequeNumbers)
-            {
-                if (await _chequeRepository.ExistsByChequeNumberAsync(pharmacyId, chequeNumber, cancellationToken: cancellationToken))
-                    return Result<List<ChequeResponseDto>>.Failure("رقم الشيك مستخدم من قبل.");
-            }
 
             // تحقق جديد: لو الشركة من غير إدارات، لازم يكون allocation واحد بس بـ DepartmentName = null
             var registeredDepartments = await _companiesQueryService.GetDepartmentNamesAsync(pharmacyId, claim.CompanyName, cancellationToken);
@@ -255,9 +246,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 if (chequeNumber.Length > 50 || bankName.Length > 200)
                     return Result<ChequeResponseDto>.Failure("رقم الشيك أو اسم البنك أطول من الحد المسموح.");
 
-                if (await _chequeRepository.ExistsByChequeNumberAsync(
-                        pharmacyId, chequeNumber, chequeId, cancellationToken))
-                    return Result<ChequeResponseDto>.Failure("رقم الشيك مستخدم من قبل.");
             }
 
             if (status == ChequeStatus.PartiallyPaid && !request.RemainingAmount.HasValue)

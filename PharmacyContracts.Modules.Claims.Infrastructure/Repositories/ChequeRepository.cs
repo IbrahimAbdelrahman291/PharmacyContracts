@@ -19,12 +19,6 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public Task<bool> ExistsForClaimAsync(Guid claimId, CancellationToken cancellationToken = default)
             => _context.Cheques.AnyAsync(c => c.ClaimId == claimId, cancellationToken);
 
-        public Task<bool> ExistsByChequeNumberAsync(Guid pharmacyId, string chequeNumber, Guid? excludedChequeId = null, CancellationToken cancellationToken = default)
-            => _context.Cheques.AnyAsync(
-                c => c.PharmacyId == pharmacyId && c.ChequeNumber == chequeNumber &&
-                     (!excludedChequeId.HasValue || c.Id != excludedChequeId.Value),
-                cancellationToken);
-
         public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear, ChequeStatus? status, CancellationToken cancellationToken = default)
         {
             var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
