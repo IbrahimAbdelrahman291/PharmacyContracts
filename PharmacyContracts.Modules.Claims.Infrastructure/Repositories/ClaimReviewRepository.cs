@@ -19,14 +19,14 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public Task<ClaimReview?> GetByClaimIdAsync(Guid claimId, CancellationToken cancellationToken = default)
             => _context.ClaimReviews.Include(r => r.Differences).FirstOrDefaultAsync(r => r.ClaimId == claimId, cancellationToken);
 
-        public async Task<PagedResult<ClaimReviewDifferenceReportDto>> GetContractualDeductionReportAsync(
+        public async Task<PagedResult<ClaimReviewDifferenceReportDto>> GetDifferenceReportAsync(
             Guid pharmacyId, string? companyName, PaginationParams pagination, CancellationToken cancellationToken = default)
         {
             var query = from difference in _context.ClaimReviewDifferences
                         join review in _context.ClaimReviews on difference.ReviewId equals review.Id
                         join claim in _context.Claims on review.ClaimId equals claim.Id
-                        where difference.PharmacyId == pharmacyId && difference.Reason == DifferenceReason.ContractualDeduction
-                        select new { claim.CompanyName, difference.Value, difference.Notes };
+                        where difference.PharmacyId == pharmacyId
+                        select new { claim.CompanyName, difference.Value, difference.Reason };
 
             if (!string.IsNullOrWhiteSpace(companyName))
             {
@@ -46,9 +46,12 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
                 Items = companyNames.Select(name => new ClaimReviewDifferenceReportDto
                 {
                     CompanyName = name,
-                    TotalAmount = rows.Where(x => x.CompanyName == name).Sum(x => x.Value),
-                    Notes = rows.Where(x => x.CompanyName == name && !string.IsNullOrWhiteSpace(x.Notes))
-                        .Select(x => x.Notes!).Distinct().ToList()
+                    TotalsByReason = Enum.GetValues<DifferenceReason>()
+                        .ToDictionary(
+                            reason => reason.ToString(),
+                            reason => rows
+                                .Where(x => x.CompanyName == name && x.Reason == reason)
+                                .Sum(x => x.Value))
                 }).ToList(),
                 PageNumber = pageNumber,
                 PageSize = pageSize,

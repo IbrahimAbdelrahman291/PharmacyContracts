@@ -177,7 +177,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         public async Task<Result<PagedResult<ClaimReviewDifferenceReportDto>>> GetDifferenceReportAsync(
             Guid pharmacyId, string? companyName, PaginationParams pagination, CancellationToken cancellationToken = default)
             => Result<PagedResult<ClaimReviewDifferenceReportDto>>.Success(
-                await _claimReviewRepository.GetContractualDeductionReportAsync(pharmacyId, companyName, pagination, cancellationToken));
+                await _claimReviewRepository.GetDifferenceReportAsync(pharmacyId, companyName, pagination, cancellationToken));
 
         private static Result ValidateReviewInput(Claim claim, bool isAccurate, decimal? correctedAmount,
             int? correctedPrescriptionsCount, IReadOnlyCollection<ClaimReviewDifferenceRequestDto>? differences,
