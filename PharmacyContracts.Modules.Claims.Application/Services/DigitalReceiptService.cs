@@ -33,10 +33,26 @@ public class DigitalReceiptService : IDigitalReceiptService
 
         var companyName = await _companies.GetCompanyNameByIdAsync(pharmacyId, request.CompanyId, cancellationToken);
         if (companyName is null) return Result<DigitalReceiptResponseDto>.Failure("Company not found for this pharmacy.");
-        if (await _repository.ExistsForPeriodAsync(pharmacyId, request.CompanyId, request.Month, request.Year, cancellationToken))
-            return Result<DigitalReceiptResponseDto>.Failure("A receipt request already exists for this company and period.");
+        string? departmentName = null;
+        if (request.DepartmentId.HasValue)
+        {
+            departmentName = await _companies.GetDepartmentNameByIdAsync(pharmacyId, request.CompanyId, request.DepartmentId.Value, cancellationToken);
+            if (departmentName is null) return Result<DigitalReceiptResponseDto>.Failure("Department not found for this company and pharmacy.");
+        }
+        if (await _repository.ExistsForPeriodAsync(pharmacyId, request.CompanyId, request.DepartmentId, request.Month, request.Year, cancellationToken))
+            return Result<DigitalReceiptResponseDto>.Failure($"A receipt request already exists for this {(request.DepartmentId.HasValue ? "department" : "company")} and period.");
 
-        var receipt = new DigitalReceipt { PharmacyId = pharmacyId, CompanyId = request.CompanyId, CompanyName = companyName, Amount = request.Amount, Month = request.Month, Year = request.Year };
+        var receipt = new DigitalReceipt
+        {
+            PharmacyId = pharmacyId,
+            CompanyId = request.CompanyId,
+            CompanyName = companyName,
+            DepartmentId = request.DepartmentId,
+            DepartmentName = departmentName,
+            Amount = request.Amount,
+            Month = request.Month,
+            Year = request.Year
+        };
         await _repository.AddAsync(receipt, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
         return Result<DigitalReceiptResponseDto>.Success(Map(receipt));
@@ -90,6 +106,7 @@ public class DigitalReceiptService : IDigitalReceiptService
     private static DigitalReceiptResponseDto Map(DigitalReceipt r) => new()
     {
         Id = r.Id, CompanyId = r.CompanyId, PharmacyId = r.PharmacyId, CompanyName = r.CompanyName,
+        DepartmentId = r.DepartmentId, DepartmentName = r.DepartmentName,
         Amount = r.Amount, Month = r.Month, Year = r.Year, Status = r.Status,
         OriginalFileName = r.OriginalFileName, UploadedAt = r.UploadedAt, ExpiresAt = r.ExpiresAt, CreatedAt = r.CreatedAt
     };

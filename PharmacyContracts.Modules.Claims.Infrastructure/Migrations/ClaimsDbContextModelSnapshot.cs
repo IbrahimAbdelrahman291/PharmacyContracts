@@ -437,6 +437,13 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DepartmentName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
 
@@ -475,8 +482,13 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
 
                     b.HasIndex("Status", "ExpiresAt");
 
+                    b.HasIndex("PharmacyId", "CompanyId", "DepartmentId", "Month", "Year")
+                        .IsUnique()
+                        .HasFilter("[DepartmentId] IS NOT NULL");
+
                     b.HasIndex("PharmacyId", "CompanyId", "Month", "Year")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[DepartmentId] IS NULL");
 
                     b.ToTable("DigitalReceipts", "claims");
                 });

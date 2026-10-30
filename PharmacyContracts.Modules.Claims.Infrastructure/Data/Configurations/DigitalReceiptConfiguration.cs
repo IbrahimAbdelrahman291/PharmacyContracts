@@ -11,11 +11,17 @@ public class DigitalReceiptConfiguration : IEntityTypeConfiguration<DigitalRecei
         builder.ToTable("DigitalReceipts", "claims");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.CompanyName).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.DepartmentName).HasMaxLength(200);
         builder.Property(x => x.Amount).HasColumnType("decimal(18,2)");
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
         builder.Property(x => x.FilePath).HasMaxLength(500);
         builder.Property(x => x.OriginalFileName).HasMaxLength(255);
-        builder.HasIndex(x => new { x.PharmacyId, x.CompanyId, x.Month, x.Year }).IsUnique();
+        builder.HasIndex(x => new { x.PharmacyId, x.CompanyId, x.Month, x.Year })
+            .IsUnique()
+            .HasFilter("[DepartmentId] IS NULL");
+        builder.HasIndex(x => new { x.PharmacyId, x.CompanyId, x.DepartmentId, x.Month, x.Year })
+            .IsUnique()
+            .HasFilter("[DepartmentId] IS NOT NULL");
         builder.HasIndex(x => new { x.Status, x.ExpiresAt });
     }
 }

@@ -8,6 +8,8 @@ public class DigitalReceipt : BaseEntity
     public Guid CompanyId { get; set; }
     public Guid PharmacyId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
+    public Guid? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
     public decimal Amount { get; set; }
     public int Month { get; set; }
     public int Year { get; set; }

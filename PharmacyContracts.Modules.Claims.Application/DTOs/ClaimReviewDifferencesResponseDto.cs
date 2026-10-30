@@ -14,6 +14,7 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public string PrescriptionsCountDifferenceType { get; set; } = string.Empty;
         public decimal DifferenceAmount { get; set; }
         public string DifferenceType { get; set; } = string.Empty;
+        public Dictionary<string, decimal> TotalsByReason { get; set; } = [];
         public List<ClaimReviewDifferenceResponseDto> Differences { get; set; } = [];
     }
 }

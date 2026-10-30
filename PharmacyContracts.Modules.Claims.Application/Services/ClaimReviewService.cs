@@ -164,6 +164,12 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 PrescriptionsCountDifferenceType = reviewDto.PrescriptionsCountDifferenceType,
                 DifferenceAmount = review.DifferenceAmount,
                 DifferenceType = review.DifferenceType.ToString(),
+                TotalsByReason = Enum.GetValues<DifferenceReason>()
+                    .ToDictionary(
+                        reason => reason.ToString(),
+                        reason => review.Differences
+                            .Where(difference => difference.Reason == reason)
+                            .Sum(difference => difference.Value)),
                 Differences = reviewDto.Differences
             });
         }
