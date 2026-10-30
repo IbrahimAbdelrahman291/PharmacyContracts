@@ -37,7 +37,7 @@ public class CompaniesController : ControllerBase
         if (!validationResult.IsValid)
             return BadRequest(new { errors = validationResult.Errors.Select(e => e.ErrorMessage) });
 
-        var pharmacyId = _currentUserService.UserId!.Value;
+        var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
         var result = await _companyService.CreateAsync(pharmacyId, request, cancellationToken);
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors });
@@ -52,7 +52,7 @@ public class CompaniesController : ControllerBase
         if (!validationResult.IsValid)
             return BadRequest(new { errors = validationResult.Errors.Select(e => e.ErrorMessage) });
 
-        var pharmacyId = _currentUserService.UserId!.Value;
+        var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
         var result = await _companyService.UpdateAsync(pharmacyId, id, request, cancellationToken);
         if (!result.Succeeded)
             return NotFound(new { errors = result.Errors });
@@ -63,7 +63,7 @@ public class CompaniesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PaginationParams pagination, CancellationToken cancellationToken)
     {
-        var pharmacyId = _currentUserService.UserId!.Value;
+        var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
         var result = await _companyService.GetPagedAsync(pharmacyId, pagination, cancellationToken);
         return Ok(result.Data);
     }
@@ -71,7 +71,7 @@ public class CompaniesController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var pharmacyId = _currentUserService.UserId!.Value;
+        var pharmacyId = _currentUserService.EffectivePharmacyId!.Value;
         var result = await _companyService.GetByIdAsync(pharmacyId, id, cancellationToken);
         if (!result.Succeeded)
             return NotFound(new { errors = result.Errors });
