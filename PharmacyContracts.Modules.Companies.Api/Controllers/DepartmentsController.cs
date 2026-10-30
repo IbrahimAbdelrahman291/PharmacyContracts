@@ -8,7 +8,7 @@ namespace PharmacyContracts.Modules.Companies.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/companies/{companyId:guid}/departments")]
-    [Authorize(Roles = "Pharmacy")]
+    [Authorize(Roles = "Pharmacy,ClaimsReviewer")]
     public class DepartmentsController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;

@@ -10,7 +10,7 @@ namespace PharmacyContracts.Modules.Companies.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/companies")]
-[Authorize(Roles = "Pharmacy")]
+[Authorize(Roles = "Pharmacy,ClaimsReviewer")]
 public class CompaniesController : ControllerBase
 {
     private readonly ICompanyService _companyService;
