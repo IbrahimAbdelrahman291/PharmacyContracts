@@ -25,6 +25,8 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Data.Configurations
             builder.Property(c => c.PaymentDifference).HasColumnType("decimal(18,2)");
             builder.Property(c => c.PaymentDifferenceType).HasConversion<string>().HasMaxLength(20);
             builder.Property(c => c.ReturnToReviewerReason).HasMaxLength(1000);
+            builder.Property(c => c.ReviewerDifferenceReason).HasMaxLength(1000);
+            builder.Property(c => c.TypeOfPay).HasMaxLength(100);
             builder.Property(c => c.RemainingAmount).HasColumnType("decimal(18,2)");
             builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(30);
 

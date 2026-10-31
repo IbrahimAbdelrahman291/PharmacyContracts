@@ -236,7 +236,11 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             var chequeNumber = request.ChequeNumber?.Trim();
             var bankName = request.BankName?.Trim();
+            var typeOfPay = request.TypeOfPay?.Trim();
             var updatesChequeDetails = request.ChequeNumber is not null || request.BankName is not null;
+
+            if (typeOfPay?.Length > 100)
+                return Result<ChequeResponseDto>.Failure("نوع الدفع أطول من الحد المسموح.");
 
             if (updatesChequeDetails)
             {
@@ -271,6 +275,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             {
                 cheque.ActualAmount = RoundMoney(request.ActualAmount!.Value);
                 cheque.ChequeDate = request.ChequeDate!.Value;
+                cheque.TypeOfPay = string.IsNullOrWhiteSpace(typeOfPay) ? null : typeOfPay;
+                cheque.DateOfTransaction = request.DateOfTransaction;
                 var signedDifference = cheque.ActualAmount.Value - cheque.FinalAmount;
                 cheque.PaymentDifference = RoundMoney(signedDifference);
                 cheque.PaymentDifferenceType = signedDifference > 0
@@ -285,9 +291,14 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 cheque.ChequeDate = null;
                 cheque.PaymentDifference = null;
                 cheque.PaymentDifferenceType = null;
+                cheque.TypeOfPay = null;
+                cheque.DateOfTransaction = null;
             }
 
             cheque.ReturnToReviewerReason = status == ChequeStatus.ReturnedToReviewer ? returnReason : null;
+
+            if (status == ChequeStatus.ReturnedToReviewer)
+                cheque.ReviewerDifferenceReason = null;
 
             if (updatesChequeDetails)
             {
@@ -295,6 +306,33 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 cheque.BankName = bankName;
             }
 
+            _chequeRepository.Update(cheque);
+            await _chequeRepository.SaveChangesAsync(cancellationToken);
+
+            return Result<ChequeResponseDto>.Success(cheque.ToResponseDto());
+        }
+
+        public async Task<Result<ChequeResponseDto>> ReviewReturnedChequeAsync(
+            Guid pharmacyId,
+            Guid chequeId,
+            ReviewReturnedChequeRequestDto request,
+            CancellationToken cancellationToken = default)
+        {
+            var cheque = await _chequeRepository.GetByIdAsync(chequeId, cancellationToken);
+            if (cheque is null || cheque.PharmacyId != pharmacyId)
+                return Result<ChequeResponseDto>.Failure("الشيك غير موجود.");
+
+            if (cheque.Status != ChequeStatus.ReturnedToReviewer)
+                return Result<ChequeResponseDto>.Failure("يمكن مراجعة الشيكات المعادة إلى المراجع فقط.");
+
+            var differenceReason = request.DifferenceReason?.Trim();
+            if (string.IsNullOrWhiteSpace(differenceReason))
+                return Result<ChequeResponseDto>.Failure("يجب كتابة سبب الفرق.");
+
+            if (differenceReason.Length > 1000)
+                return Result<ChequeResponseDto>.Failure("سبب الفرق أطول من الحد المسموح.");
+
+            cheque.ReviewerDifferenceReason = differenceReason;
             _chequeRepository.Update(cheque);
             await _chequeRepository.SaveChangesAsync(cancellationToken);
 

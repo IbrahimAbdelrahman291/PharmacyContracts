@@ -19,7 +19,10 @@ namespace PharmacyContracts.Modules.Claims.Application.DTOs
         public decimal? PaymentDifference { get; set; }
         public string? PaymentDifferenceType { get; set; }
         public string? ReturnToReviewerReason { get; set; }
+        public string? ReviewerDifferenceReason { get; set; }
         public DateTime? ChequeDate { get; set; }
+        public string? TypeOfPay { get; set; }
+        public DateTime? DateOfTransaction { get; set; }
         public int ClaimMonth { get; set; }
         public int ClaimYear { get; set; }
         public DateTime StartDate { get; set; }

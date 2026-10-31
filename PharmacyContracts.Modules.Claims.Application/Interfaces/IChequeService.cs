@@ -10,5 +10,6 @@ namespace PharmacyContracts.Modules.Claims.Application.Interfaces
         Task<Result<List<ChequeResponseDto>>> GetAsync(Guid pharmacyId, string? companyName, int? month, int? year, string? status, CancellationToken cancellationToken = default);
         Task<Result<List<ChequeResponseDto>>> GetUpcomingDueAsync(Guid pharmacyId, int days, int? month, int? year, CancellationToken cancellationToken = default);
         Task<Result<ChequeResponseDto>> UpdateStatusAsync(Guid pharmacyId, Guid chequeId, UpdateChequeStatusRequestDto request, CancellationToken cancellationToken = default);
+        Task<Result<ChequeResponseDto>> ReviewReturnedChequeAsync(Guid pharmacyId, Guid chequeId, ReviewReturnedChequeRequestDto request, CancellationToken cancellationToken = default);
     }
 }

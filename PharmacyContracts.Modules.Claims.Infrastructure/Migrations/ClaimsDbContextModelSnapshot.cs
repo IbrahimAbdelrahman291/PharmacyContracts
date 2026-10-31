@@ -71,6 +71,9 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DateOfTransaction")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("DepartmentName")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -101,6 +104,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("ReviewerDifferenceReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("SettlementDays")
                         .HasColumnType("int");
 
@@ -114,6 +121,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
 
                     b.Property<decimal>("TaxPercentage")
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("TypeOfPay")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -481,13 +492,13 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
 
                     b.HasIndex("Status", "ExpiresAt");
 
-                    b.HasIndex("PharmacyId", "CompanyId", "DepartmentId", "Month", "Year")
-                        .IsUnique()
-                        .HasFilter("[DepartmentId] IS NOT NULL");
-
                     b.HasIndex("PharmacyId", "CompanyId", "Month", "Year")
                         .IsUnique()
                         .HasFilter("[DepartmentId] IS NULL");
+
+                    b.HasIndex("PharmacyId", "CompanyId", "DepartmentId", "Month", "Year")
+                        .IsUnique()
+                        .HasFilter("[DepartmentId] IS NOT NULL");
 
                     b.ToTable("DigitalReceipts", "claims");
                 });

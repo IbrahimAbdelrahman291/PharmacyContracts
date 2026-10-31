@@ -41,18 +41,36 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
                 .Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
             var rows = await query.Where(x => companyNames.Contains(x.CompanyName)).ToListAsync(cancellationToken);
 
+            // Calculate this from the complete filtered report, rather than the current
+            // page, so the All Companies column remains stable while paging.
+            var totalsForAllCompanies = await query
+                .GroupBy(x => x.Reason)
+                .Select(group => new { Reason = group.Key, Total = group.Sum(x => x.Value) })
+                .ToDictionaryAsync(x => x.Reason, x => x.Total, cancellationToken);
+
+            var items = companyNames.Select(name => new ClaimReviewDifferenceReportDto
+            {
+                CompanyName = name,
+                TotalsByReason = Enum.GetValues<DifferenceReason>()
+                    .ToDictionary(
+                        reason => reason.ToString(),
+                        reason => rows
+                            .Where(x => x.CompanyName == name && x.Reason == reason)
+                            .Sum(x => x.Value))
+            }).ToList();
+
+            items.Add(new ClaimReviewDifferenceReportDto
+            {
+                CompanyName = "All Companies",
+                TotalsByReason = Enum.GetValues<DifferenceReason>()
+                    .ToDictionary(
+                        reason => reason.ToString(),
+                        reason => totalsForAllCompanies.GetValueOrDefault(reason))
+            });
+
             return new PagedResult<ClaimReviewDifferenceReportDto>
             {
-                Items = companyNames.Select(name => new ClaimReviewDifferenceReportDto
-                {
-                    CompanyName = name,
-                    TotalsByReason = Enum.GetValues<DifferenceReason>()
-                        .ToDictionary(
-                            reason => reason.ToString(),
-                            reason => rows
-                                .Where(x => x.CompanyName == name && x.Reason == reason)
-                                .Sum(x => x.Value))
-                }).ToList(),
+                Items = items,
                 PageNumber = pageNumber,
                 PageSize = pageSize,
                 TotalCount = totalCount

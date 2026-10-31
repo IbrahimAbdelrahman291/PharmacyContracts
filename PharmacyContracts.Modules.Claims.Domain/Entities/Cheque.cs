@@ -25,7 +25,10 @@ namespace PharmacyContracts.Modules.Claims.Domain.Entities
         public decimal? PaymentDifference { get; set; }
         public PaymentDifferenceType? PaymentDifferenceType { get; set; }
         public string? ReturnToReviewerReason { get; set; }
+        public string? ReviewerDifferenceReason { get; set; }
         public DateTime? ChequeDate { get; set; }
+        public string? TypeOfPay { get; set; }
+        public DateTime? DateOfTransaction { get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
