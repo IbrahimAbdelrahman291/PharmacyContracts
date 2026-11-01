@@ -273,7 +273,8 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
 
             if (isReceived)
             {
-                cheque.ActualAmount = RoundMoney(request.ActualAmount!.Value);
+                cheque.ActualAmount = cheque.ActualAmount ?? 0;
+                cheque.ActualAmount += RoundMoney(request.ActualAmount!.Value);
                 cheque.ChequeDate = request.ChequeDate!.Value;
                 cheque.TypeOfPay = string.IsNullOrWhiteSpace(typeOfPay) ? null : typeOfPay;
                 cheque.DateOfTransaction = request.DateOfTransaction;
