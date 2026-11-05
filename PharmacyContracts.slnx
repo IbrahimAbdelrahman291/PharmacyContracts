@@ -31,4 +31,7 @@
     <Project Path="PharmacyContracts.Modules.Sales.Domain/PharmacyContracts.Modules.Sales.Domain.csproj" Id="bc55ed4d-70d0-4615-9c56-3c6f8013247e" />
     <Project Path="PharmacyContracts.Modules.Sales.Infrastructure/PharmacyContracts.Modules.Sales.Infrastructure.csproj" Id="7d0d5fa7-8aa4-4108-9ab4-0554ba122aa8" />
   </Folder>
+  <Folder Name="/tests/Modules/Sales/">
+    <Project Path="PharmacyContracts.Modules.Sales.Application.Tests/PharmacyContracts.Modules.Sales.Application.Tests.csproj" />
+  </Folder>
 </Solution>

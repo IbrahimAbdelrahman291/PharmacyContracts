@@ -467,6 +467,11 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                     b.Property<int>("Month")
                         .HasColumnType("int");
 
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("OriginalFileName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -478,6 +483,11 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

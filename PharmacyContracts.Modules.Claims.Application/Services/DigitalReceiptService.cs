@@ -23,6 +23,10 @@ public class DigitalReceiptService : IDigitalReceiptService
     public async Task<Result<DigitalReceiptResponseDto>> CreateAsync(Guid pharmacyId, CreateDigitalReceiptRequestDto request, CancellationToken cancellationToken = default)
     {
         if (request.Amount < 0) return Result<DigitalReceiptResponseDto>.Failure("Amount cannot be negative.");
+        if (string.IsNullOrWhiteSpace(request.Note)) return Result<DigitalReceiptResponseDto>.Failure("Note is required.");
+        if (request.Note.Length > 1000) return Result<DigitalReceiptResponseDto>.Failure("Note cannot exceed 1000 characters.");
+        if (string.IsNullOrWhiteSpace(request.Type)) return Result<DigitalReceiptResponseDto>.Failure("Type is required.");
+        if (request.Type.Length > 100) return Result<DigitalReceiptResponseDto>.Failure("Type cannot exceed 100 characters.");
         if (request.Month is < 1 or > 12) return Result<DigitalReceiptResponseDto>.Failure("Month must be between 1 and 12.");
         if (request.Year < 1) return Result<DigitalReceiptResponseDto>.Failure("Year is invalid.");
 
@@ -50,6 +54,8 @@ public class DigitalReceiptService : IDigitalReceiptService
             DepartmentId = request.DepartmentId,
             DepartmentName = departmentName,
             Amount = request.Amount,
+            Note = request.Note.Trim(),
+            Type = request.Type.Trim(),
             Month = request.Month,
             Year = request.Year
         };
@@ -107,7 +113,7 @@ public class DigitalReceiptService : IDigitalReceiptService
     {
         Id = r.Id, CompanyId = r.CompanyId, PharmacyId = r.PharmacyId, CompanyName = r.CompanyName,
         DepartmentId = r.DepartmentId, DepartmentName = r.DepartmentName,
-        Amount = r.Amount, Month = r.Month, Year = r.Year, Status = r.Status,
+        Amount = r.Amount, Note = r.Note, Type = r.Type, Month = r.Month, Year = r.Year, Status = r.Status,
         OriginalFileName = r.OriginalFileName, UploadedAt = r.UploadedAt, ExpiresAt = r.ExpiresAt, CreatedAt = r.CreatedAt
     };
 }

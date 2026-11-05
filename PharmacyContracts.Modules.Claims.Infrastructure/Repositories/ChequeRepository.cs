@@ -90,15 +90,17 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
             }).ToListAsync(cancellationToken);
         }
 
-        public Task<List<Cheque>> GetUpcomingDueAsync(Guid pharmacyId, int days, int? month, int? year, CancellationToken cancellationToken = default)
+        public Task<List<Cheque>> GetUpcomingDueAsync(
+            Guid pharmacyId, int days, int? month, int? year, DateTime? fromDate, DateTime? toDate,
+            CancellationToken cancellationToken = default)
         {
-            var today = DateTime.UtcNow.Date;
-            var endDate = today.AddDays(days);
+            var rangeStart = fromDate?.Date ?? DateTime.UtcNow.Date;
+            var rangeEndExclusive = (toDate?.Date ?? rangeStart.AddDays(days)).AddDays(1);
 
             var query = _context.Cheques
                 .Where(c => c.PharmacyId == pharmacyId &&
                             c.Status == ChequeStatus.Pending &&
-                            c.EndDate >= today && c.EndDate <= endDate);
+                            c.EndDate >= rangeStart && c.EndDate < rangeEndExclusive);
 
             if (month.HasValue)
                 query = query.Where(c => c.ClaimMonth == month.Value);

@@ -3,6 +3,7 @@ using PharmacyContracts.Modules.Sales.Application.DTOs;
 using PharmacyContracts.Modules.Sales.Application.Interfaces;
 using PharmacyContracts.Modules.Sales.Domain.Entities;
 using PharmacyContracts.Modules.Sales.Domain.Enums;
+using PharmacyContracts.Modules.Sales.Application.Utilities;
 
 namespace PharmacyContracts.Modules.Sales.Application.Services;
 
@@ -39,10 +40,10 @@ public class SalesRowValidator : ISalesRowValidator
             var remainingAmount = ParseDecimal(row.RowNumber, "الباقي", row.RawRemainingAmount, rowErrors, allowZero: true);
 
             SalesRecordStatus status = default;
-            var trimmedStatus = row.RawStatus.Trim();
-            if (trimmedStatus == "مبيعات")
+            var normalizedStatus = ExcelTextNormalizer.Normalize(row.RawStatus);
+            if (normalizedStatus == "مبيعات")
                 status = SalesRecordStatus.Sale;
-            else if (trimmedStatus == "[مرتجعات]")
+            else if (normalizedStatus == "[مرتجعات]")
                 status = SalesRecordStatus.Return;
             else
                 rowErrors.Add(Error(row.RowNumber, "مبيعات", "القيمة يجب أن تكون 'مبيعات' أو '[مرتجعات]' فقط."));

@@ -11,6 +11,8 @@ public class DigitalReceiptResponseDto
     public Guid? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
     public decimal Amount { get; set; }
+    public string Note { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
     public int Month { get; set; }
     public int Year { get; set; }
     public DigitalReceiptStatus Status { get; set; }

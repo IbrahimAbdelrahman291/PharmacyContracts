@@ -198,10 +198,16 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         }
 
         public async Task<Result<List<ChequeResponseDto>>> GetUpcomingDueAsync(
-            Guid pharmacyId, int days, int? month, int? year, CancellationToken cancellationToken = default)
+            Guid pharmacyId, int days, int? month, int? year, DateTime? fromDate, DateTime? toDate, CancellationToken cancellationToken = default)
         {
             if (days < 0)
                 return Result<List<ChequeResponseDto>>.Failure("عدد الأيام يجب ألا يكون سالبًا.");
+
+            if (fromDate.HasValue != toDate.HasValue)
+                return Result<List<ChequeResponseDto>>.Failure("From date and to date must be provided together.");
+
+            if (fromDate?.Date > toDate?.Date)
+                return Result<List<ChequeResponseDto>>.Failure("From date cannot be after to date.");
 
             if (month is < 1 or > 12)
                 return Result<List<ChequeResponseDto>>.Failure("Month must be between 1 and 12.");
@@ -209,7 +215,7 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
             if (year is < 1 or > 9999)
                 return Result<List<ChequeResponseDto>>.Failure("Year must be between 1 and 9999.");
 
-            var cheques = await _chequeRepository.GetUpcomingDueAsync(pharmacyId, days, month, year, cancellationToken);
+            var cheques = await _chequeRepository.GetUpcomingDueAsync(pharmacyId, days, month, year, fromDate, toDate, cancellationToken);
             return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
         }
 

@@ -13,6 +13,8 @@ public class DigitalReceiptConfiguration : IEntityTypeConfiguration<DigitalRecei
         builder.Property(x => x.CompanyName).IsRequired().HasMaxLength(200);
         builder.Property(x => x.DepartmentName).HasMaxLength(200);
         builder.Property(x => x.Amount).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.Note).IsRequired().HasMaxLength(1000);
+        builder.Property(x => x.Type).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
         builder.Property(x => x.FilePath).HasMaxLength(500);
         builder.Property(x => x.OriginalFileName).HasMaxLength(255);
