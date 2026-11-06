@@ -175,13 +175,23 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
         }
 
         public async Task<Result<List<ChequeResponseDto>>> GetAsync(
-            Guid pharmacyId, string? companyName, int? month, int? year, string? status, CancellationToken cancellationToken = default)
+            Guid pharmacyId, string? companyName, int? month, int? year, string? status,
+            string? bankName, string? chequeNumber, CancellationToken cancellationToken = default)
         {
             if (month is < 1 or > 12)
                 return Result<List<ChequeResponseDto>>.Failure("Month must be between 1 and 12.");
 
             if (year is < 1 or > 9999)
                 return Result<List<ChequeResponseDto>>.Failure("Year must be between 1 and 9999.");
+
+            bankName = string.IsNullOrWhiteSpace(bankName) ? null : bankName.Trim();
+            chequeNumber = string.IsNullOrWhiteSpace(chequeNumber) ? null : chequeNumber.Trim();
+
+            if (bankName?.Length > 200)
+                return Result<List<ChequeResponseDto>>.Failure("Bank name is longer than the allowed limit.");
+
+            if (chequeNumber?.Length > 50)
+                return Result<List<ChequeResponseDto>>.Failure("Cheque number is longer than the allowed limit.");
 
             ChequeStatus? parsedStatus = null;
             if (status is not null)
@@ -193,18 +203,25 @@ namespace PharmacyContracts.Modules.Claims.Application.Services
                 parsedStatus = value;
             }
 
-            var cheques = await _chequeRepository.GetByPharmacyAsync(pharmacyId, companyName, month, year, parsedStatus, cancellationToken);
+            var cheques = await _chequeRepository.GetByPharmacyAsync(
+                pharmacyId, companyName, month, year, parsedStatus, bankName, chequeNumber, cancellationToken);
             return Result<List<ChequeResponseDto>>.Success(cheques.Select(c => c.ToResponseDto()).ToList());
         }
 
         public async Task<Result<List<ChequeResponseDto>>> GetUpcomingDueAsync(
-            Guid pharmacyId, int days, int? month, int? year, DateTime? fromDate, DateTime? toDate, CancellationToken cancellationToken = default)
+            Guid pharmacyId, int? days, int? month, int? year, DateTime? fromDate, DateTime? toDate, CancellationToken cancellationToken = default)
         {
             if (days < 0)
                 return Result<List<ChequeResponseDto>>.Failure("عدد الأيام يجب ألا يكون سالبًا.");
 
             if (fromDate.HasValue != toDate.HasValue)
                 return Result<List<ChequeResponseDto>>.Failure("From date and to date must be provided together.");
+
+            if (!days.HasValue && !fromDate.HasValue)
+                return Result<List<ChequeResponseDto>>.Failure("Days or a from/to date range must be provided.");
+
+            if (days.HasValue && fromDate.HasValue)
+                return Result<List<ChequeResponseDto>>.Failure("Use either days or a from/to date range, not both.");
 
             if (fromDate?.Date > toDate?.Date)
                 return Result<List<ChequeResponseDto>>.Failure("From date cannot be after to date.");

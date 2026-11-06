@@ -19,7 +19,10 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         public Task<bool> ExistsForClaimAsync(Guid claimId, CancellationToken cancellationToken = default)
             => _context.Cheques.AnyAsync(c => c.ClaimId == claimId, cancellationToken);
 
-        public Task<List<Cheque>> GetByPharmacyAsync(Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear, ChequeStatus? status, CancellationToken cancellationToken = default)
+        public Task<List<Cheque>> GetByPharmacyAsync(
+            Guid pharmacyId, string? companyName, int? claimMonth, int? claimYear,
+            ChequeStatus? status, string? bankName, string? chequeNumber,
+            CancellationToken cancellationToken = default)
         {
             var query = _context.Cheques.Where(c => c.PharmacyId == pharmacyId);
 
@@ -34,6 +37,12 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
 
             if (status.HasValue)
                 query = query.Where(c => c.Status == status.Value);
+
+            if (bankName is not null)
+                query = query.Where(c => c.BankName != null && c.BankName.Contains(bankName));
+
+            if (chequeNumber is not null)
+                query = query.Where(c => c.ChequeNumber != null && c.ChequeNumber.Contains(chequeNumber));
 
             return query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
         }
@@ -91,11 +100,11 @@ namespace PharmacyContracts.Modules.Claims.Infrastructure.Repositories
         }
 
         public Task<List<Cheque>> GetUpcomingDueAsync(
-            Guid pharmacyId, int days, int? month, int? year, DateTime? fromDate, DateTime? toDate,
+            Guid pharmacyId, int? days, int? month, int? year, DateTime? fromDate, DateTime? toDate,
             CancellationToken cancellationToken = default)
         {
             var rangeStart = fromDate?.Date ?? DateTime.UtcNow.Date;
-            var rangeEndExclusive = (toDate?.Date ?? rangeStart.AddDays(days)).AddDays(1);
+            var rangeEndExclusive = (toDate?.Date ?? rangeStart.AddDays(days!.Value)).AddDays(1);
 
             var query = _context.Cheques
                 .Where(c => c.PharmacyId == pharmacyId &&

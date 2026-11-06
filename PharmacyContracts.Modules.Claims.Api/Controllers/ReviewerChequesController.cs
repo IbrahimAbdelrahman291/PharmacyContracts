@@ -27,7 +27,7 @@ public class ReviewerChequesController : ControllerBase
             return Forbid();
 
         var result = await _chequeService.GetAsync(
-            pharmacyId, null, null, null, "ReturnedToReviewer", cancellationToken);
+            pharmacyId, null, null, null, "ReturnedToReviewer", null, null, cancellationToken);
 
         return Ok(result.Data);
     }
